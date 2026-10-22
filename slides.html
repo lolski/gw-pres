@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Bringing Type Systems into the Graph World</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css">
+  <style>
+    .reveal h1, .reveal h2 { text-transform: none; }
+    .reveal table { font-size: 0.65em; }
+    .reveal pre { width: 100%; }
+    .reveal pre code { max-height: 480px; font-size: 0.7em; line-height: 1.35; }
+    .reveal .small { font-size: 0.6em; }
+    .reveal blockquote { font-style: italic; width: 90%; }
+    .reveal .cols { display: flex; gap: 1em; align-items: flex-start; }
+    .reveal .cols > div { flex: 1; min-width: 0; }
+    .reveal .cols h3 { font-size: 0.8em; }
+    .bad  { color: #ff6b6b; }
+    .good { color: #7bed9f; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===== 1. WHY STRICTER TYPES (0:00–6:00) ===== -->
+<section data-markdown><textarea data-template>
+# Bringing Type Systems into the Graph World
+
+Ganeshwara Hananda · TypeDB
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Graphs are great at connections…
+
+…and terrible at guarantees.
+
+- Raw nodes and edges: **no structural enforcement**
+- Property graphs add labels and properties —
+  still can't guarantee integrity at scale
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Meanwhile, in programming languages
+
+- Python — dynamic by design — added **type hints**
+- **TypeScript** overtook JavaScript
+
+Nobody was forced. Teams *chose* the stricter language.
+
+Untyped is fine — until the system gets big.
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+> "Schemaless structures still have an **implicit schema**."
+> — Martin Fowler
+
+It lives in your app code — unenforced, duplicated in every service.
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Thesis
+
+TypeDB brings type-system concepts into the graph world:
+
+**inheritance · cardinality · type inference · functions**
+
+Strong structure, graph expressiveness.
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Running example: ecommerce
+
+- **user** — email, name, address
+- **transaction** — a user buys goods; amount, payment-method, date
+- **good** — price
+
+Every feature, same example, TypeQL vs Cypher.
+</textarea></section>
+
+<!-- ===== 2. TYPE SAFETY BENEFITS (6:00–13:00) ===== -->
+<section data-markdown><textarea data-template>
+## Type safety for developers
+
+- Schema = **executable documentation**
+- Errors move **left**: fail at commit in dev,
+  not in production three services downstream
+- Validation lives in the **one** place every write passes through —
+  not re-implemented (and drifting) across N microservices
+- Strictness is a **spectrum**: dial it up per use case, no re-platforming
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Type safety for AI agents
+
+Reactome dataset in MySQL, Neo4j, TypeDB
+Claude Sonnet 5 + DeepSeek V4 Pro · 42 questions · 3,024 runs
+
+| | SQL | Cypher | TypeQL |
+|---|---|---|---|
+| Zero-shot | ~60% | ~60% | 25% |
+| + docs & examples | 78–82% | 74–84% | 62–75% |
+| + retries | 83–85% | 82–89% | **86–92%** |
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Why does TypeQL win with retries?
+
+A wrong Cypher query **silently returns empty** —
+the agent can't tell "no data" from "bad query."
+
+A wrong TypeQL query **fails loudly** — the agent self-corrects.
+
+**The same strictness that protects developers
+is what makes agents reliable.**
+</textarea></section>
+
+<!-- ===== 3. CARDINALITY (13:00–20:00) ===== -->
+<section data-markdown><textarea data-template>
+# Cardinality
+
+The rule: every transaction has **exactly one buyer**
+and **at least one good**; a user has **1–3 addresses**.
+</textarea></section>
+
+<section>
+  <h2>Cardinality: TypeQL</h2>
+  <pre><code class="language-typeql" data-trim>
+define
+  entity user,
+    owns email @key,
+    owns name @card(1..1),
+    owns address @card(1..3),
+    plays transaction:buyer;
+
+  entity good, owns price @card(1..1), plays transaction:item;
+
+  relation transaction,
+    relates buyer @card(1..1),
+    relates item @card(1..),
+    owns amount, owns payment-method, owns date;
+  </code></pre>
+</section>
+
+<section>
+  <h2>Cardinality: Cypher</h2>
+  <pre><code class="language-cypher" data-trim>
+CREATE CONSTRAINT user_email FOR (u:User) REQUIRE u.email IS UNIQUE;
+CREATE CONSTRAINT user_name  FOR (u:User) REQUIRE u.name IS NOT NULL;
+
+// addresses "1 to 3"?              — not expressible
+// transaction has exactly 1 buyer? — not expressible
+// transaction has ≥1 good?         — not expressible
+  </code></pre>
+  <p class="small">Property uniqueness/existence only. <strong>No cardinality constraints on relationships at all.</strong></p>
+</section>
+
+<section>
+  <h2>Insert a transaction with no goods</h2>
+  <div class="cols">
+    <div>
+      <h3 class="bad">Cypher</h3>
+      <p>Commits. Bug discovered whenever someone notices the revenue report is off.</p>
+    </div>
+    <div>
+      <h3 class="good">TypeQL</h3>
+      <p><code>commit</code> fails with a cardinality violation naming the relation and role.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 4. INHERITANCE (20:00–27:00) ===== -->
+<section data-markdown><textarea data-template>
+# Inheritance
+
+The rule: goods come in kinds (book, electronics);
+all have a price; "any good" is **one query**.
+</textarea></section>
+
+<section>
+  <h2>Inheritance: TypeQL</h2>
+  <pre><code class="language-typeql" data-trim>
+define
+  entity good @abstract, owns price @card(1..1), plays transaction:item;
+  entity book sub good, owns isbn;
+  entity electronics sub good, owns warranty-months;
+  </code></pre>
+  <pre><code class="language-typeql" data-trim>
+match
+  $t isa transaction (buyer: $u, item: $g);
+  $g has price $p;    # matches books AND electronics — polymorphic
+  </code></pre>
+</section>
+
+<section>
+  <h2>Inheritance: Cypher</h2>
+  <pre><code class="language-cypher" data-trim>
+CREATE (b:Good:Book {price: 12.99, isbn: "978-..."})  // multi-label = hope
+
+MATCH (t:Transaction)-[:CONTAINS]->(g:Good)
+RETURN g   // works only if everyone remembered the :Good label
+  </code></pre>
+  <ul class="small">
+    <li>Nothing stops <code>CREATE (b:Book {...})</code> without <code>:Good</code> — invisible to every "all goods" query</li>
+    <li>Nothing stops a <code>:Good:User</code></li>
+    <li>No abstract types: a bare <code>:Good</code> can exist</li>
+    <li>No inherited constraints: <code>price IS NOT NULL</code> re-declared per label</li>
+  </ul>
+</section>
+
+<section data-markdown><textarea data-template>
+## The benefit
+
+`book sub good` is **enforced**:
+
+- every book *is* a good — inherits `price @card(1..1)`
+- `good` is abstract — bare goods can't exist
+- the polymorphic query is **guaranteed complete**
+
+Add `entity furniture sub good` next sprint —
+every existing query over `good` already covers it.
+</textarea></section>
+
+<!-- ===== 5. FUNCTIONS (27:00–32:00) ===== -->
+<section data-markdown><textarea data-template>
+# Functions
+
+Big queries rot.
+Name them, type them, reuse them — **in the schema**.
+</textarea></section>
+
+<section>
+  <h2>Extract the complicated query</h2>
+  <pre><code class="language-typeql" data-trim>
+define
+fun total_spend($u: user) -> double:
+  match
+    $t isa transaction (buyer: $u);
+    $t has amount $a;
+  return sum($a);
+  </code></pre>
+  <pre><code class="language-typeql" data-trim>
+match
+  $u isa user, has name $n;
+  let $s = total_spend($u);
+  $s > 1000;    # big spenders, one line
+  </code></pre>
+</section>
+
+<section data-markdown><textarea data-template>
+## Why it matters
+
+- **Typed signature**: takes a `user`, returns a `double` —
+  call sites are checked, like a function in your codebase
+- Defined **once**, in the schema — every service and every agent
+  calls the same definition
+- Cypher's equivalent: copy-paste the subquery,
+  or write a Java/APOC procedure and deploy it to the server
+</textarea></section>
+
+<!-- ===== 6. CLOSE (32:00–35:00) ===== -->
+<section data-markdown><textarea data-template>
+## We typed our code. Now the data.
+
+- Cardinality the **database** enforces
+- Inheritance that's **real**, not label convention
+- **Functions** instead of copy-paste
+- Agents that go from **25% → 92%** because errors are loud
+
+### typedb.com
+
+<span class="small">blog: *How strict should your schema be?* · *Benchmarking LLM query generation across SQL, Cypher and TypeQL*</span>
+
+**Thank you — questions?**
+</textarea></section>
+
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+<script>
+  Reveal.initialize({ hash: true, slideNumber: true, plugins: [RevealMarkdown, RevealHighlight] });
+</script>
+</body>
+</html>
