@@ -24,7 +24,10 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
     - examples:
       - frontend is moving from javascript to typescript.
       - backend is moving from plain python to python with type hints
-      - modern languages with modern type systems: scala, haskell, rust
+      - modern languages with modern type systems: scala, haskell, rust. show with a chart:
+        - axis 1: not typesafe <----> typesafe
+        - axis 2: verbose <----> not verbose
+    - challenges: verbosity
 - arc 2: programming languages have evolved. now it's time for database!
 - arc 3: null-safety in graph database with typedb's optionals
   - show typeql vs cypher queries. the typeql one should also show the schema 
@@ -38,7 +41,11 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
 - arc 5: show how typedb inheritance makes it more type safe vs cypher
   - show typeql vs cypher queries
   - show what's the benefit that typeql has
-  - - typeql and cypher has to be shown side by side for clarity
+  - typeql and cypher has to be shown side by side for clarity
+- arc 6
+  - modern databases: mongodb, postgresql, typedb, amazon neptune, neo4j
+    - axis 1: not typesafe <----> typesafe
+    - axis 2: verbose <----> not verbose
 - arc 6: benefits
   - for developers
   - for AI agents, guardrails and the likes
