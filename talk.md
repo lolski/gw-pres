@@ -18,7 +18,9 @@
 - Make the contract machine-checked. The industry keeps choosing this, voluntarily:
   - **Frontend:** JavaScript → TypeScript.
   - **Backend:** plain Python → Python with type hints (+ mypy in CI).
-  - **Modern languages designed around modern type systems:** Scala, Haskell, Rust.
+  - **Modern languages designed around modern type systems:** Haskell, Rust.
+- Shown on a quadrant chart — x: not type-safe → type-safe, y: verbose → not verbose. Roster: Python (no hints), Python (hints), JavaScript, TypeScript, Java, Haskell, Rust. JavaScript/Python sit top-left (loose, concise), 2005-era Java bottom-right (safe, ceremonial), TypeScript/Haskell/Rust top-right.
+- **The challenge: verbosity.** Types used to cost ceremony — that's why people resisted. Modern type systems answered with inference: safety without the boilerplate. The industry is migrating up and to the right.
 - Nobody was forced. Untyped is fine until the system gets big — then teams pay for the migration because the contract-checking pays more.
 
 # ARC 2 — Now it's time for the database
@@ -141,17 +143,26 @@ MATCH (t:Transaction)-[:CONTAINS]->(g:Good) RETURN g    // works only if
 
 **The benefit:** in TypeDB, `book sub good` is enforced — every book *is* a good, inherits `price @card(1..1)`, `good` is abstract so bare goods can't exist, and the polymorphic query is guaranteed complete. Add `entity furniture sub good` next sprint: every existing query over `good` already covers it.
 
-# ARC 6 — Benefits
+# ARC 6 — The database landscape
 
-## 6. What you buy with all this (28:00–33:00) — 5 min
+## 6. The database landscape (28:00–29:00) — 1 min
 
-**6a. For developers (2 min)**
+Callback to arc 1's chart, same axes, now with databases:
+- Roster: MongoDB, Neo4j, Amazon Neptune, JanusGraph, TigerGraph, Stardog, PostgreSQL, TypeDB.
+- MongoDB top-left (schemaless, easy); Neo4j, Neptune, JanusGraph on the loose side; TigerGraph and Stardog typed but ceremonial; PostgreSQL bottom-right (enforced schema, DDL/JOIN ceremony); **TypeDB top-right** — enforced schema without SQL's verbosity.
+- Same migration as languages, one layer down.
+
+# ARC 7 — Benefits
+
+## 7. What you buy with all this (29:00–33:00) — 4 min
+
+**7a. For developers (2 min)**
 - Errors at commit time in dev, not in production three services downstream.
 - Validation lives in the one place every write passes through — the database — instead of being re-implemented (and drifting) across N microservices.
 - The schema is executable documentation; tooling and new hires read the model instead of reverse-engineering app code.
 - Refactor safely: rename or restructure a type and every query against it is checked.
 
-**6b. For AI agents: guardrails (3 min)** — blog #2 benchmark:
+**7b. For AI agents: guardrails (2 min)** — blog #2 benchmark:
 - Agents writing queries need guardrails the same way they need sandboxes: the schema bounds what they can express, and errors tell them when they've left the road.
 - Setup: Reactome dataset in MySQL, Neo4j, TypeDB; Claude Sonnet 5 + DeepSeek V4 Pro; 42 questions, 3,024 runs.
 - Zero-shot: SQL ~60%, Cypher ~60%, TypeQL 25% (training-data volume wins).
@@ -159,7 +170,7 @@ MATCH (t:Transaction)-[:CONTAINS]->(g:Good) RETURN g    // works only if
 - **With retries: TypeQL hits 92% — best of all three.** A wrong Cypher query silently returns empty — the agent can't tell "no data" from "bad query". A wrong TypeQL query fails loudly → self-correction works. Loud errors are the agent's feedback loop.
 - The same strictness that protects developers is what makes agents reliable.
 
-## 7. Close (33:00–35:00) — 2 min
+## 8. Close (33:00–35:00) — 2 min
 
 - We type-checked our code (TypeScript, Python hints). TypeDB type-checks the data layer — the last untyped layer.
 - Recap: no null to blow up in app code, cardinality the database enforces, inheritance that's real instead of label convention — and agents that go from 25% to 92% because errors are loud.
@@ -169,7 +180,7 @@ MATCH (t:Transaction)-[:CONTAINS]->(g:Good) RETURN g    // works only if
 ---
 
 ## Speaker notes
-- The deck shows a persistent arc badge (top-right) so listeners always know where they are — six arcs: type-safe languages, now-the-database, null-safety, cardinality, inheritance, benefits. It switches on each arc's first slide and clears on the close.
+- The deck shows a persistent arc badge (top-right) so listeners always know where they are — seven arcs: type-safe languages, now-the-database, null-safety, cardinality, inheritance, database landscape, benefits. It switches on each arc's first slide and clears on the close.
 - Timing checkpoint: be starting arc 5 (inheritance) by minute 21, or compress its Cypher half.
 - Every comparison slide: TypeQL left, Cypher right, side by side on one slide, same ecommerce example — the visual rhythm is the argument.
 - All TypeQL snippets in this talk and the deck pass `typeql-check`; re-run it after editing any snippet.

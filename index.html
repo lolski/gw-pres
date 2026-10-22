@@ -22,6 +22,13 @@
     .reveal .cols .small { display: block; margin-top: 0.3em; }
     .bad  { color: #ff6b6b; }
     .good { color: #7bed9f; }
+    .quadrant { width: 88%; max-width: 820px; margin: 0 auto; display: block; }
+    .quadrant text { fill: #ccc; font-family: sans-serif; font-size: 22px; }
+    .quadrant .axis { stroke: #666; stroke-width: 2; }
+    .quadrant .axislabel { fill: #888; font-size: 19px; }
+    .quadrant circle { fill: #42affa; }
+    .quadrant .hero circle { fill: #7bed9f; }
+    .quadrant .hero text { fill: #7bed9f; font-weight: bold; }
     #arc-badge {
       position: fixed; top: 14px; right: 18px; z-index: 10;
       font-family: sans-serif; font-size: 15px; color: #888;
@@ -67,9 +74,40 @@ The industry keeps choosing this, voluntarily:
 
 - **Frontend**: JavaScript → TypeScript
 - **Backend**: plain Python → Python with type hints
-- **Modern languages, modern type systems**: Scala, Haskell, Rust
+- **Modern languages, modern type systems**: Haskell, Rust
 
 Untyped is fine — until the system gets big.
+</textarea></section>
+
+<section>
+  <h2>The language landscape</h2>
+  <svg class="quadrant" viewBox="0 0 800 500" role="img" aria-label="Languages plotted by type safety and verbosity">
+    <line class="axis" x1="60" y1="250" x2="760" y2="250"/>
+    <line class="axis" x1="410" y1="40" x2="410" y2="460"/>
+    <text class="axislabel" x="65" y="240">not type-safe</text>
+    <text class="axislabel" x="660" y="240">type-safe</text>
+    <text class="axislabel" x="418" y="60">not verbose</text>
+    <text class="axislabel" x="418" y="452">verbose</text>
+    <g><circle cx="120" cy="160" r="9"/><text x="138" y="166">JavaScript</text></g>
+    <g><circle cx="175" cy="115" r="9"/><text x="193" y="121">Python</text></g>
+    <g><circle cx="470" cy="190" r="9"/><text x="488" y="196">Python + type hints</text></g>
+    <g><circle cx="540" cy="130" r="9"/><text x="558" y="136">TypeScript</text></g>
+    <g><circle cx="590" cy="420" r="9"/><text x="608" y="426">Java (2005)</text></g>
+    <g><circle cx="630" cy="120" r="9"/><text x="648" y="126">Haskell</text></g>
+    <g class="hero"><circle cx="680" cy="200" r="9"/><text x="698" y="206">Rust</text></g>
+  </svg>
+</section>
+
+<section data-markdown><textarea data-template>
+## The challenge: verbosity
+
+Types used to cost **ceremony** —
+2005 Java made "type-safe" feel like "triple the code."
+
+Modern type systems answered with **inference**:
+Haskell, Rust, TypeScript — safety without the boilerplate.
+
+The industry is migrating **up and to the right**.
 </textarea></section>
 
 <!-- ============ ARC 2 — NOW IT'S TIME FOR THE DATABASE ============ -->
@@ -313,8 +351,30 @@ Add `entity furniture sub good` next sprint —
 every existing query over `good` already covers it.
 </textarea></section>
 
-<!-- ===== 6. BENEFITS (28:00–33:00) ===== -->
-<section data-markdown data-arc="Arc 6 · Benefits"><textarea data-template>
+<!-- ===== 6. DATABASE LANDSCAPE (28:00–29:00) ===== -->
+<section data-arc="Arc 6 · The database landscape">
+  <h2>The database landscape</h2>
+  <svg class="quadrant" viewBox="0 0 800 500" role="img" aria-label="Databases plotted by type safety and verbosity">
+    <line class="axis" x1="60" y1="250" x2="760" y2="250"/>
+    <line class="axis" x1="410" y1="40" x2="410" y2="460"/>
+    <text class="axislabel" x="65" y="240">not type-safe</text>
+    <text class="axislabel" x="660" y="240">type-safe</text>
+    <text class="axislabel" x="418" y="60">not verbose</text>
+    <text class="axislabel" x="418" y="452">verbose</text>
+    <g><circle cx="120" cy="130" r="9"/><text x="138" y="136">MongoDB</text></g>
+    <g><circle cx="200" cy="180" r="9"/><text x="218" y="186">Neo4j</text></g>
+    <g><circle cx="250" cy="310" r="9"/><text x="268" y="316">Amazon Neptune</text></g>
+    <g><circle cx="300" cy="215" r="9"/><text x="318" y="221">JanusGraph</text></g>
+    <g><circle cx="500" cy="300" r="9"/><text x="518" y="306">TigerGraph</text></g>
+    <g><circle cx="590" cy="350" r="9"/><text x="608" y="356">Stardog</text></g>
+    <g><circle cx="560" cy="420" r="9"/><text x="578" y="426">PostgreSQL</text></g>
+    <g class="hero"><circle cx="670" cy="140" r="9"/><text x="688" y="146">TypeDB</text></g>
+  </svg>
+  <p class="small">Same migration, one layer down: schema that's enforced, without SQL's ceremony.</p>
+</section>
+
+<!-- ===== 7. BENEFITS (29:00–33:00) ===== -->
+<section data-markdown data-arc="Arc 7 · Benefits"><textarea data-template>
 # What you buy with all this
 </textarea></section>
 
@@ -361,7 +421,7 @@ A wrong TypeQL query **fails loudly** — the agent self-corrects.
 is what makes agents reliable.**
 </textarea></section>
 
-<!-- ===== 7. CLOSE (33:00–35:00) ===== -->
+<!-- ===== 8. CLOSE (33:00–35:00) ===== -->
 <section data-markdown data-arc=""><textarea data-template>
 ## We typed our code. Now the data.
 
