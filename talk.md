@@ -7,7 +7,7 @@
 
 # ARC 1 — Programming is moving to type-safe languages
 
-## 1. Programming is moving to type-safe languages (0:00–10:00) — 10 min
+## 1. Programming is moving to type-safe languages (0:00–7:00) — 7 min
 
 **1a. The problem: contracts (3 min)**
 - Every boundary in a system is a contract: a function signature, an API payload, a row in a database. The question is never *whether* you have a contract — it's *where it lives and who enforces it*.
@@ -21,53 +21,45 @@
   - **Modern languages designed around modern type systems:** Scala, Haskell, Rust.
 - Nobody was forced. Untyped is fine until the system gets big — then teams pay for the migration because the contract-checking pays more.
 
-**1c. The benefits, briefly (3 min)**
-- **For developers:** errors at compile time instead of production; refactors that can't silently break callers; tooling and IDEs that understand the model; the types *are* the documentation.
-- **For autonomous AI agents** (blog #2 benchmark — Reactome in MySQL/Neo4j/TypeDB, Claude Sonnet 5 + DeepSeek V4 Pro, 42 questions, 3,024 runs):
-  - Zero-shot: SQL ~60%, Cypher ~60%, TypeQL 25% (training-data volume wins).
-  - With in-context docs + examples: all converge to ~75–84%.
-  - **With retries: TypeQL hits 92% — best of all three.** A wrong Cypher query silently returns empty — the agent can't tell "no data" from "bad query". A wrong TypeQL query fails loudly → self-correction works. Loud errors are the agent's feedback loop.
-
 # ARC 2 — Now it's time for the database
 
-## 2. The pivot (10:00–11:00) — 1 min
+## 2. The pivot (7:00–8:00) — 1 min
 
 - Programming languages have evolved: null-safety, generics, gradual typing — every decade, stricter. Your code is typed, your API contracts are typed… your database still takes whatever you throw at it.
 - **Programming languages have evolved. Now it's time for the database.**
 - Graphs are the sharpest case: great at representing connections, virtually no structural enforcement — even property graphs' labels and properties can't guarantee integrity at scale.
-- The rest of the talk: four type-system concepts in TypeDB, each shown against Cypher. (Strictness is a spectrum you can dial — blog #1.)
+- The rest of the talk: three type-system concepts in TypeDB, each shown against Cypher, then what you buy with them. (Strictness is a spectrum you can dial — blog #1.)
 
 # ARC 3 — Null-safety with optionals
 
-## 3. Null-safety with optionals (11:00–16:00) — 5 min
+## 3. Null-safety with optionals (8:00–14:00) — 6 min
 
 **The rule we want:** not every user has an address (digital-only customers) — but absence must be explicit, never a silent `null`.
 
 - Tony Hoare called null his "billion-dollar mistake." Languages fixed it with types: Rust's `Option<T>`, Kotlin's `String?`, Haskell's `Maybe`. TypeQL follows the same lineage: **there is no null in TypeDB.**
-- Optionality is declared in the schema (`owns address @card(0..3)`) and handled explicitly in queries with `try`:
+- Shown side by side on one slide — TypeQL left (schema + query), Cypher right. Optionality is declared in the schema and handled explicitly in queries with `try`:
 
+```typeql
+define
+  entity user,
+    owns name @card(1..1),     # required
+    owns address @card(0..3); # optional
+```
 ```typeql
 match
   $u isa user, has name $n;
   try { $u has address $a; };   # $a bound if present, absent otherwise
 ```
 
-- Functions are null-safe too — an optional return is part of the typed signature:
+- Spoken aside (not on slide): functions are null-safe too — an optional return is part of the typed signature (`fun shipping_address($u: user) -> address?`).
 
-```typeql
-define
-fun shipping_address($u: user) -> address?:
-  match $u has address $a;
-  return first $a;
-```
-
-**Cypher:** a missing property silently returns `null`, and null propagates — `WHERE u.address = "..."` is neither true nor false, `WHERE NOT u.address = "..."` silently drops the row too. Three-valued logic bugs that no tool warns you about.
+**Cypher (right column):** no schema — every property is optional everywhere. A missing property silently returns `null`, and null propagates — `WHERE u.address = "..."` is neither true nor false, `WHERE NOT u.address = "..."` silently drops the row too. Three-valued logic bugs that no tool warns you about.
 
 **The benefit:** absence is a type-level concept checked by the query compiler, not a sentinel value that leaks through your results and blows up in app code.
 
 # ARC 4 — Cardinality
 
-## 4. Cardinality: TypeQL vs Cypher (16:00–22:00) — 6 min
+## 4. Cardinality: TypeQL vs Cypher (14:00–21:00) — 7 min
 
 **The rule we want:** every transaction has exactly one buyer and at least one good; a user has at most 3 addresses.
 
@@ -88,7 +80,7 @@ define
     owns amount, owns payment-method, owns date;
 ```
 
-**Cypher / Neo4j — the closest you can get:**
+**Cypher / Neo4j — the closest you can get (shown side by side on the slide):**
 ```cypher
 CREATE CONSTRAINT user_email FOR (u:User) REQUIRE u.email IS UNIQUE;
 CREATE CONSTRAINT user_name  FOR (u:User) REQUIRE u.name IS NOT NULL;
@@ -98,13 +90,28 @@ CREATE CONSTRAINT user_name  FOR (u:User) REQUIRE u.name IS NOT NULL;
 ```
 Neo4j constraints cover property uniqueness/existence only. **There is no cardinality constraint on relationships at all** — a `(:Transaction)` with zero goods or two buyers commits happily; you police it in app code or a nightly audit query.
 
-**The benefit, live on a slide:** insert a transaction with no good →
-- Cypher: commits. Bug discovered whenever someone notices the revenue report is off.
-- TypeQL: `commit` fails with a cardinality violation naming the relation and role.
+**The benefit — insert queries, side by side on the slide:** insert a transaction with no good:
+
+```typeql
+match
+  $u isa user, has email "ganesh@typedb.com";
+insert
+  $t isa transaction (buyer: $u),
+    has amount 42.0,
+    has payment-method "card";
+```
+```cypher
+MATCH (u:User {email: "ganesh@typedb.com"})
+CREATE (u)<-[:BUYER]-(t:Transaction {amount: 42.0, paymentMethod: "card"})
+// no goods attached
+```
+
+- Cypher: **commits.** Bug discovered whenever someone notices the revenue report is off.
+- TypeQL: `commit` **fails** with a cardinality violation — `transaction:item` requires at least 1 player.
 
 # ARC 5 — Inheritance
 
-## 5. Inheritance: TypeQL vs Cypher (22:00–28:00) — 6 min
+## 5. Inheritance: TypeQL vs Cypher (21:00–28:00) — 7 min
 
 **The rule we want:** goods come in kinds (book, electronics); all have a price; queries over "any good" should be one query.
 
@@ -121,7 +128,7 @@ match
   $g has price $p;         # matches books AND electronics — polymorphic
 ```
 
-**Cypher — inheritance by convention:**
+**Cypher — inheritance by convention (side by side on the slide):**
 ```cypher
 CREATE (b:Good:Book {price: 12.99, isbn: "978-..."})   // multi-label = hope
 MATCH (t:Transaction)-[:CONTAINS]->(g:Good) RETURN g    // works only if
@@ -134,56 +141,35 @@ MATCH (t:Transaction)-[:CONTAINS]->(g:Good) RETURN g    // works only if
 
 **The benefit:** in TypeDB, `book sub good` is enforced — every book *is* a good, inherits `price @card(1..1)`, `good` is abstract so bare goods can't exist, and the polymorphic query is guaranteed complete. Add `entity furniture sub good` next sprint: every existing query over `good` already covers it.
 
-# ARC 6 — Functions
+# ARC 6 — Benefits
 
-## 6. Functions: extract the whole query (28:00–33:00) — 5 min
+## 6. What you buy with all this (28:00–33:00) — 5 min
 
-Big queries rot. Extract the *entire* query — user lookup included — into one named, typed function in the schema:
+**6a. For developers (2 min)**
+- Errors at commit time in dev, not in production three services downstream.
+- Validation lives in the one place every write passes through — the database — instead of being re-implemented (and drifting) across N microservices.
+- The schema is executable documentation; tooling and new hires read the model instead of reverse-engineering app code.
+- Refactor safely: rename or restructure a type and every query against it is checked.
 
-```typeql
-define
-fun transactions_by_user_email($email: string) -> { transaction }:
-  match
-    $u isa user, has email $email;
-    $t isa transaction (buyer: $u);
-  return { $t };
-```
-
-Now the whole query is a single function call:
-
-```typeql
-match
-  let $t in transactions_by_user_email("ganesh@typedb.com");
-fetch { "transaction": { $t.* } };
-```
-
-And the backend serving it collapses to almost nothing — the match *is* the function call:
-
-```python
-@app.get("/users/{email}/transactions")
-def list_transactions(email: str):
-    with driver.transaction("shop", TransactionType.READ) as tx:
-        query = f'''
-            match let $t in transactions_by_user_email("{email}");
-            fetch {{ "transaction": {{ $t.* }} }};'''
-        return [row for row in tx.query(query).resolve()]
-```
-
-- Typed signature: takes a `string`, returns a stream of `transaction` — call sites checked by the query compiler.
-- The domain logic lives once, in the schema; every service and every agent calls the same definition. Change the definition of "a user's transactions" (exclude refunds, say) → zero backend deploys.
-- Cypher's equivalent: copy-paste the subquery everywhere, or write a custom procedure in Java/APOC and deploy it to the server.
+**6b. For AI agents: guardrails (3 min)** — blog #2 benchmark:
+- Agents writing queries need guardrails the same way they need sandboxes: the schema bounds what they can express, and errors tell them when they've left the road.
+- Setup: Reactome dataset in MySQL, Neo4j, TypeDB; Claude Sonnet 5 + DeepSeek V4 Pro; 42 questions, 3,024 runs.
+- Zero-shot: SQL ~60%, Cypher ~60%, TypeQL 25% (training-data volume wins).
+- With in-context docs + examples: all converge to ~75–84%.
+- **With retries: TypeQL hits 92% — best of all three.** A wrong Cypher query silently returns empty — the agent can't tell "no data" from "bad query". A wrong TypeQL query fails loudly → self-correction works. Loud errors are the agent's feedback loop.
+- The same strictness that protects developers is what makes agents reliable.
 
 ## 7. Close (33:00–35:00) — 2 min
 
 - We type-checked our code (TypeScript, Python hints). TypeDB type-checks the data layer — the last untyped layer.
-- Recap: no null to blow up in app code, cardinality the database enforces, inheritance that's real instead of label convention, whole queries as one typed function call — and agents that go from 25% to 92% because errors are loud.
+- Recap: no null to blow up in app code, cardinality the database enforces, inheritance that's real instead of label convention — and agents that go from 25% to 92% because errors are loud.
 - Sources: typedb.com/blog — *How strict should your schema be?* · *Benchmarking LLM query generation across SQL, Cypher and TypeQL*.
 - Q&A.
 
 ---
 
 ## Speaker notes
-- The deck shows a persistent arc badge (top-right) so listeners always know where they are — six arcs: type-safe languages, now-the-database, null-safety, cardinality, inheritance, functions. It switches on each arc's first slide and clears on the close.
-- Timing checkpoint: be starting section 5 (inheritance) by minute 22, or compress its Cypher half.
+- The deck shows a persistent arc badge (top-right) so listeners always know where they are — six arcs: type-safe languages, now-the-database, null-safety, cardinality, inheritance, benefits. It switches on each arc's first slide and clears on the close.
+- Timing checkpoint: be starting arc 5 (inheritance) by minute 21, or compress its Cypher half.
 - Every comparison slide: TypeQL left, Cypher right, side by side on one slide, same ecommerce example — the visual rhythm is the argument.
 - All TypeQL snippets in this talk and the deck pass `typeql-check`; re-run it after editing any snippet.

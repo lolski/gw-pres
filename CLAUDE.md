@@ -25,21 +25,23 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
       - frontend is moving from javascript to typescript.
       - backend is moving from plain python to python with type hints
       - modern languages with modern type systems: scala, haskell, rust
-    - cover the benefits briefly. one for developers and next for autonomous ai agents
 - arc 2: programming languages have evolved. now it's time for database!
 - arc 3: null-safety in graph database with typedb's optionals
+  - show typeql vs cypher queries. the typeql one should also show the schema 
+  - show what's the benefit that typeql has
+  - typeql and cypher has to be shown side by side for clarity
 - arc 4: cardinality in graph database: show how typedb cardinality makes it more type safe vs cypher
-  - show typeql vs cypher queries
+  - show schema in typeql vs cypher queries
+  - show insert queries in both as well, inserting a new transaction with no goods and how typeql type safety handles it better
   - show what's the benefit that typeql has
   - typeql and cypher has to be shown side by side for clarity
 - arc 5: show how typedb inheritance makes it more type safe vs cypher
   - show typeql vs cypher queries
   - show what's the benefit that typeql has
   - - typeql and cypher has to be shown side by side for clarity
-- arc 6: show how complicated queries can be extracted into a function
-  - extract an entire query into a single function call `transactions_by_user_email(user_email)` (show list of transactions for a given user)
-  - make the entire query be a single function call. something like `match transactions_by_user_email(...); fetch ...`
-  - show python code serving a backend using it. what we want to demonstrate is the backend code becomes so short since the match query is just a call to a function
+- arc 6: benefits
+  - for developers
+  - for AI agents, guardrails and the likes
 
 # Examples: Ecommerce
 Whenever show off a feature and making a comparison vs neo4j, use these e-commerce examples. Here are the "entities" and how they're related to others:
