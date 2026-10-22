@@ -39,7 +39,8 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
   - show what's the benefit that typeql has
   - typeql and cypher has to be shown side by side for clarity
 - arc 5: show how typedb inheritance makes it more type safe vs cypher
-  - show typeql vs cypher queries
+  - start with the conceptual problem as a diagram: book has isbn, electronics has waranty. both are a kind of books which has price
+  - show how to express them in typeql vs cypher queries
   - show what's the benefit that typeql has
   - typeql and cypher has to be shown side by side for clarity
 - arc 6
@@ -48,7 +49,11 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
     - axis 2: verbose <----> not verbose
 - arc 7: benefits
   - for developers
+    - easier to review
+    - verify correctness simply by looking at types
   - for AI agents, guardrails and the likes
+    - LLM generates query, databases validates the query
+    - the stricter the type system the more reliable it is
 
 # Examples: Ecommerce
 Whenever show off a feature and making a comparison vs neo4j, use these e-commerce examples. Here are the "entities" and how they're related to others:

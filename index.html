@@ -292,12 +292,30 @@ CREATE (u)<-[:BUYER]-
 </section>
 
 <!-- ===== 5. INHERITANCE (21:00–28:00) ===== -->
-<section data-markdown data-arc="Arc 5 · Inheritance"><textarea data-template>
-# Inheritance
-
-The rule: goods come in kinds (book, electronics);
-all have a price; "any good" is **one query**.
-</textarea></section>
+<section data-arc="Arc 5 · Inheritance">
+  <h1>Inheritance</h1>
+  <p class="small">The conceptual problem: goods come in kinds, each with its own attributes — and every kind has a price.</p>
+  <svg class="quadrant" viewBox="0 0 800 400" role="img" aria-label="Type hierarchy: book and electronics are kinds of good">
+    <g fill="none" stroke="#ccc" stroke-width="2">
+      <rect x="290" y="30" width="220" height="90" rx="8"/>
+      <rect x="80" y="260" width="220" height="90" rx="8"/>
+      <rect x="500" y="260" width="220" height="90" rx="8"/>
+      <line x1="190" y1="260" x2="380" y2="120"/>
+      <line x1="610" y1="260" x2="420" y2="120"/>
+    </g>
+    <g fill="#ccc" font-family="sans-serif" font-size="24" text-anchor="middle">
+      <text x="400" y="68" font-weight="bold">good</text>
+      <text x="400" y="100" font-size="19">abstract · has price</text>
+      <text x="190" y="298" font-weight="bold">book</text>
+      <text x="190" y="330" font-size="19">+ has isbn</text>
+      <text x="610" y="298" font-weight="bold">electronics</text>
+      <text x="610" y="330" font-size="19">+ has warranty</text>
+      <text x="255" y="185" font-size="18" fill="#888">is a</text>
+      <text x="545" y="185" font-size="18" fill="#888">is a</text>
+    </g>
+  </svg>
+  <p class="small">The question: can your database <em>say</em> this — and enforce it?</p>
+</section>
 
 <section>
   <h2>Inheritance: TypeQL vs Cypher</h2>
@@ -381,19 +399,24 @@ every existing query over `good` already covers it.
 <section data-markdown><textarea data-template>
 ## For developers
 
+- **Easier to review**: a PR's queries and schema changes carry their
+  contract with them — the reviewer reads types, not the whole codebase
+- **Verify correctness by looking at the types**: if it type-checks
+  against the schema, whole classes of bugs are already ruled out
 - Errors at **commit time in dev**, not in production three services downstream
-- Validation lives in the **one** place every write passes through —
-  not re-implemented (and drifting) across N microservices
-- The schema is **executable documentation**
-- Refactor safely: change a type, every query against it is checked
+- Validation lives in the **one** place every write passes through
 </textarea></section>
 
 <section data-markdown><textarea data-template>
 ## For AI agents: guardrails
 
-Agents writing queries need guardrails like they need sandboxes:
-the **schema bounds what they can express**, and
-**errors tell them when they've left the road**.
+The division of labor:
+**the LLM generates the query, the database validates it.**
+
+The schema bounds what agents can express;
+errors tell them when they've left the road.
+
+**The stricter the type system, the more reliable the agent.**
 </textarea></section>
 
 <section data-markdown><textarea data-template>

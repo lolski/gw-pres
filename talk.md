@@ -115,6 +115,8 @@ CREATE (u)<-[:BUYER]-(t:Transaction {amount: 42.0, paymentMethod: "card"})
 
 ## 5. Inheritance: TypeQL vs Cypher (21:00–28:00) — 7 min
 
+**Open with the conceptual problem as a diagram** (hierarchy on the slide): `good` (abstract, has price) at the top, `book` (+ isbn) and `electronics` (+ warranty) below it, "is a" arrows up. The question to the room: can your database *say* this — and enforce it?
+
 **The rule we want:** goods come in kinds (book, electronics); all have a price; queries over "any good" should be one query.
 
 **TypeQL:**
@@ -157,13 +159,14 @@ Callback to arc 1's chart, same axes, now with databases:
 ## 7. What you buy with all this (29:00–33:00) — 4 min
 
 **7a. For developers (2 min)**
+- **Easier to review:** a PR's queries and schema changes carry their contract with them — the reviewer reads the types instead of tracing the whole codebase.
+- **Verify correctness simply by looking at the types:** if a query type-checks against the schema, whole classes of bugs (wrong role, missing attribute, impossible join) are already ruled out before review even starts.
 - Errors at commit time in dev, not in production three services downstream.
 - Validation lives in the one place every write passes through — the database — instead of being re-implemented (and drifting) across N microservices.
-- The schema is executable documentation; tooling and new hires read the model instead of reverse-engineering app code.
-- Refactor safely: rename or restructure a type and every query against it is checked.
 
 **7b. For AI agents: guardrails (2 min)** — blog #2 benchmark:
-- Agents writing queries need guardrails the same way they need sandboxes: the schema bounds what they can express, and errors tell them when they've left the road.
+- The division of labor: **the LLM generates the query, the database validates it.** The schema bounds what agents can express; errors tell them when they've left the road.
+- **The stricter the type system, the more reliable the agent** — the benchmark below is the evidence.
 - Setup: Reactome dataset in MySQL, Neo4j, TypeDB; Claude Sonnet 5 + DeepSeek V4 Pro; 42 questions, 3,024 runs.
 - Zero-shot: SQL ~60%, Cypher ~60%, TypeQL 25% (training-data volume wins).
 - With in-context docs + examples: all converge to ~75–84%.
