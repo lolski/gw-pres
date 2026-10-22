@@ -17,83 +17,72 @@
     .reveal .cols { display: flex; gap: 1em; align-items: flex-start; }
     .reveal .cols > div { flex: 1; min-width: 0; }
     .reveal .cols h3 { font-size: 0.8em; }
+    .reveal .cols pre { margin: 0 0 0.4em; }
+    .reveal .cols pre code { font-size: 0.52em; line-height: 1.35; }
+    .reveal .cols .small { display: block; margin-top: 0.3em; }
     .bad  { color: #ff6b6b; }
     .good { color: #7bed9f; }
+    #arc-badge {
+      position: fixed; top: 14px; right: 18px; z-index: 10;
+      font-family: sans-serif; font-size: 15px; color: #888;
+      letter-spacing: 0.04em; pointer-events: none;
+    }
   </style>
 </head>
 <body>
 <div class="reveal">
 <div class="slides">
 
-<!-- ===== 1. WHY STRICTER TYPES (0:00–6:00) ===== -->
+<!-- ============ ARC 1 — PROGRAMMING IS MOVING TO TYPE-SAFE LANGUAGES ============ -->
+<!-- ===== 1. CONTRACTS → TYPE SAFETY → BENEFITS (0:00–10:00) ===== -->
 <section data-markdown><textarea data-template>
 # Bringing Type Systems into the Graph World
 
 Ganeshwara Hananda · TypeDB
 </textarea></section>
 
-<section data-markdown><textarea data-template>
-## Graphs are great at connections…
+<section data-markdown data-arc="Arc 1 · Programming is moving to type-safe languages"><textarea data-template>
+## The problem: contracts
 
-…and terrible at guarantees.
+Every boundary is a contract —
+a function signature, an API payload, a row in a database.
 
-- Raw nodes and edges: **no structural enforcement**
-- Property graphs add labels and properties —
-  still can't guarantee integrity at scale
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## Meanwhile, in programming languages
-
-- Python — dynamic by design — added **type hints**
-- **TypeScript** overtook JavaScript
-
-Nobody was forced. Teams *chose* the stricter language.
-
-Untyped is fine — until the system gets big.
+The question is never *whether* you have a contract.
+It's **where it lives and who enforces it**.
 </textarea></section>
 
 <section data-markdown><textarea data-template>
 > "Schemaless structures still have an **implicit schema**."
 > — Martin Fowler
 
-It lives in your app code — unenforced, duplicated in every service.
+Untyped systems keep the contract in docs and people's heads.
+Enforcement is hope, plus runtime errors in production.
 </textarea></section>
 
 <section data-markdown><textarea data-template>
-## Thesis
+## The solution: type safety
 
-TypeDB brings type-system concepts into the graph world:
+Make the contract **machine-checked**.
+The industry keeps choosing this, voluntarily:
 
-**inheritance · cardinality · type inference · functions**
+- **Frontend**: JavaScript → TypeScript
+- **Backend**: plain Python → Python with type hints
+- **Modern languages, modern type systems**: Scala, Haskell, Rust
 
-Strong structure, graph expressiveness.
+Untyped is fine — until the system gets big.
 </textarea></section>
 
 <section data-markdown><textarea data-template>
-## Running example: ecommerce
+## Benefits for developers
 
-- **user** — email, name, address
-- **transaction** — a user buys goods; amount, payment-method, date
-- **good** — price
-
-Every feature, same example, TypeQL vs Cypher.
-</textarea></section>
-
-<!-- ===== 2. TYPE SAFETY BENEFITS (6:00–13:00) ===== -->
-<section data-markdown><textarea data-template>
-## Type safety for developers
-
-- Schema = **executable documentation**
-- Errors move **left**: fail at commit in dev,
-  not in production three services downstream
-- Validation lives in the **one** place every write passes through —
-  not re-implemented (and drifting) across N microservices
-- Strictness is a **spectrum**: dial it up per use case, no re-platforming
+- Errors at **compile time**, not in production
+- Refactors that can't silently break callers
+- Tooling and IDEs that understand the model
+- The types **are** the documentation
 </textarea></section>
 
 <section data-markdown><textarea data-template>
-## Type safety for AI agents
+## Benefits for AI agents
 
 Reactome dataset in MySQL, Neo4j, TypeDB
 Claude Sonnet 5 + DeepSeek V4 Pro · 42 questions · 3,024 runs
@@ -113,12 +102,34 @@ the agent can't tell "no data" from "bad query."
 
 A wrong TypeQL query **fails loudly** — the agent self-corrects.
 
-**The same strictness that protects developers
-is what makes agents reliable.**
+**Loud errors are the agent's feedback loop.**
+</textarea></section>
+
+<!-- ============ ARC 2 — NOW IT'S TIME FOR THE DATABASE ============ -->
+<!-- ===== 2. THE PIVOT (10:00–11:00) ===== -->
+<section data-markdown data-arc="Arc 2 · Now it’s time for the database"><textarea data-template>
+## Programming languages have evolved.
+
+Null-safety · generics · gradual typing — every decade, stricter.
+
+Your code is typed. Your API contracts are typed.
+Your database still takes whatever you throw at it.
+
+# Now it's time for the database.
+</textarea></section>
+
+<section data-markdown><textarea data-template>
+## Running example: ecommerce
+
+- **user** — email, name, address
+- **transaction** — a user buys goods; amount, payment-method, date
+- **good** — price
+
+Four type-system concepts, each in TypeQL vs Cypher.
 </textarea></section>
 
 <!-- ===== 3. NULL-SAFETY (11:00–16:00) ===== -->
-<section data-markdown><textarea data-template>
+<section data-markdown data-arc="Arc 3 · Null-safety with optionals"><textarea data-template>
 # Null-safety
 
 The rule: not every user has an address —
@@ -179,7 +190,7 @@ MATCH (u:User) WHERE NOT u.address = "..." // null: ALSO dropped
 </section>
 
 <!-- ===== 4. CARDINALITY (16:00–22:00) ===== -->
-<section data-markdown><textarea data-template>
+<section data-markdown data-arc="Arc 4 · Cardinality"><textarea data-template>
 # Cardinality
 
 The rule: every transaction has **exactly one buyer**
@@ -187,8 +198,11 @@ and **at least one good**; a user has **at most 3 addresses**.
 </textarea></section>
 
 <section>
-  <h2>Cardinality: TypeQL</h2>
-  <pre><code class="language-typeql" data-trim>
+  <h2>Cardinality: TypeQL vs Cypher</h2>
+  <div class="cols">
+    <div>
+      <h3 class="good">TypeQL</h3>
+      <pre><code class="language-typeql" data-trim>
 define
   entity user,
     owns email @key,
@@ -196,26 +210,34 @@ define
     owns address @card(0..3),
     plays transaction:buyer;
 
-  entity good, owns price @card(1..1), plays transaction:item;
+  entity good,
+    owns price @card(1..1),
+    plays transaction:item;
 
   relation transaction,
     relates buyer @card(1..1),
     relates item @card(1..),
     owns amount, owns payment-method, owns date;
-  </code></pre>
-</section>
+      </code></pre>
+    </div>
+    <div>
+      <h3 class="bad">Cypher</h3>
+      <pre><code class="language-cypher" data-trim>
+CREATE CONSTRAINT user_email FOR (u:User)
+  REQUIRE u.email IS UNIQUE;
+CREATE CONSTRAINT user_name  FOR (u:User)
+  REQUIRE u.name IS NOT NULL;
 
-<section>
-  <h2>Cardinality: Cypher</h2>
-  <pre><code class="language-cypher" data-trim>
-CREATE CONSTRAINT user_email FOR (u:User) REQUIRE u.email IS UNIQUE;
-CREATE CONSTRAINT user_name  FOR (u:User) REQUIRE u.name IS NOT NULL;
-
-// addresses "at most 3"?           — not expressible
-// transaction has exactly 1 buyer? — not expressible
-// transaction has ≥1 good?         — not expressible
-  </code></pre>
-  <p class="small">Property uniqueness/existence only. <strong>No cardinality constraints on relationships at all.</strong></p>
+// addresses "at most 3"?
+//          — not expressible
+// transaction has exactly 1 buyer?
+//          — not expressible
+// transaction has ≥1 good?
+//          — not expressible
+      </code></pre>
+      <span class="small">Property uniqueness/existence only. <strong>No cardinality constraints on relationships at all.</strong></span>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -233,7 +255,7 @@ CREATE CONSTRAINT user_name  FOR (u:User) REQUIRE u.name IS NOT NULL;
 </section>
 
 <!-- ===== 5. INHERITANCE (22:00–28:00) ===== -->
-<section data-markdown><textarea data-template>
+<section data-markdown data-arc="Arc 5 · Inheritance"><textarea data-template>
 # Inheritance
 
 The rule: goods come in kinds (book, electronics);
@@ -241,34 +263,42 @@ all have a price; "any good" is **one query**.
 </textarea></section>
 
 <section>
-  <h2>Inheritance: TypeQL</h2>
-  <pre><code class="language-typeql" data-trim>
+  <h2>Inheritance: TypeQL vs Cypher</h2>
+  <div class="cols">
+    <div>
+      <h3 class="good">TypeQL</h3>
+      <pre><code class="language-typeql" data-trim>
 define
-  entity good @abstract, owns price @card(1..1), plays transaction:item;
+  entity good @abstract,
+    owns price @card(1..1),
+    plays transaction:item;
   entity book sub good, owns isbn;
-  entity electronics sub good, owns warranty-months;
-  </code></pre>
-  <pre><code class="language-typeql" data-trim>
+  entity electronics sub good,
+    owns warranty-months;
+      </code></pre>
+      <pre><code class="language-typeql" data-trim>
 match
   $t isa transaction (buyer: $u, item: $g);
-  $g has price $p;    # matches books AND electronics — polymorphic
-  </code></pre>
-</section>
+  $g has price $p;
+  # matches books AND electronics
+      </code></pre>
+    </div>
+    <div>
+      <h3 class="bad">Cypher</h3>
+      <pre><code class="language-cypher" data-trim>
+CREATE (b:Good:Book
+  {price: 12.99, isbn: "978-..."})
+// multi-label = hope
 
-<section>
-  <h2>Inheritance: Cypher</h2>
-  <pre><code class="language-cypher" data-trim>
-CREATE (b:Good:Book {price: 12.99, isbn: "978-..."})  // multi-label = hope
-
-MATCH (t:Transaction)-[:CONTAINS]->(g:Good)
-RETURN g   // works only if everyone remembered the :Good label
-  </code></pre>
-  <ul class="small">
-    <li>Nothing stops <code>CREATE (b:Book {...})</code> without <code>:Good</code> — invisible to every "all goods" query</li>
-    <li>Nothing stops a <code>:Good:User</code></li>
-    <li>No abstract types: a bare <code>:Good</code> can exist</li>
-    <li>No inherited constraints: <code>price IS NOT NULL</code> re-declared per label</li>
-  </ul>
+MATCH (t:Transaction)
+  -[:CONTAINS]->(g:Good)
+RETURN g
+// works only if everyone
+// remembered the :Good label
+      </code></pre>
+      <span class="small">No abstract types, nothing stops a bare <code>:Good</code> or a <code>:Good:User</code>, constraints re-declared per label.</span>
+    </div>
+  </div>
 </section>
 
 <section data-markdown><textarea data-template>
@@ -284,51 +314,63 @@ Add `entity furniture sub good` next sprint —
 every existing query over `good` already covers it.
 </textarea></section>
 
-<!-- ===== 6. FUNCTIONS (28:00–32:00) ===== -->
-<section data-markdown><textarea data-template>
+<!-- ===== 6. FUNCTIONS (28:00–33:00) ===== -->
+<section data-markdown data-arc="Arc 6 · Functions"><textarea data-template>
 # Functions
 
 Big queries rot.
-Name them, type them, reuse them — **in the schema**.
+Extract the **entire query** into one typed, named function.
 </textarea></section>
 
 <section>
-  <h2>Extract the complicated query</h2>
+  <h2>All transactions for a user</h2>
   <pre><code class="language-typeql" data-trim>
 define
-fun total_spend($u: user) -> double:
+fun transactions_by_user_email($email: string) -> { transaction }:
   match
+    $u isa user, has email $email;
     $t isa transaction (buyer: $u);
-    $t has amount $a;
-  return sum($a);
+  return { $t };
   </code></pre>
+  <p class="small">The whole query — user lookup included — becomes a single function call:</p>
   <pre><code class="language-typeql" data-trim>
 match
-  $u isa user, has name $n;
-  let $s = total_spend($u);
-  $s > 1000;    # big spenders, one line
+  let $t in transactions_by_user_email("ganesh@typedb.com");
+fetch { "transaction": { $t.* } };
   </code></pre>
+</section>
+
+<section>
+  <h2>The backend collapses</h2>
+  <pre><code class="language-python" data-trim>
+@app.get("/users/{email}/transactions")
+def list_transactions(email: str):
+    with driver.transaction("shop", TransactionType.READ) as tx:
+        query = f'''
+            match let $t in transactions_by_user_email("{email}");
+            fetch {{ "transaction": {{ $t.* }} }};'''
+        return [row for row in tx.query(query).resolve()]
+  </code></pre>
+  <p class="small">The match <em>is</em> the function call — domain logic lives in the schema, not the service.</p>
 </section>
 
 <section data-markdown><textarea data-template>
 ## Why it matters
 
-- **Typed signature**: takes a `user`, returns a `double` —
-  call sites are checked, like a function in your codebase
-- Defined **once**, in the schema — every service and every agent
-  calls the same definition
+- **Typed signature**: takes a `string`, returns a stream of `transaction` — call sites checked by the query compiler
+- Defined **once**, in the schema — every service and agent calls the same definition. Redefine "a user's transactions" (exclude refunds) → **zero backend deploys**
 - Cypher's equivalent: copy-paste the subquery,
   or write a Java/APOC procedure and deploy it to the server
 </textarea></section>
 
-<!-- ===== 7. CLOSE (32:00–35:00) ===== -->
-<section data-markdown><textarea data-template>
+<!-- ===== 7. CLOSE (33:00–35:00) ===== -->
+<section data-markdown data-arc=""><textarea data-template>
 ## We typed our code. Now the data.
 
 - **No null** to blow up in app code
 - Cardinality the **database** enforces
 - Inheritance that's **real**, not label convention
-- **Functions** instead of copy-paste
+- Whole queries as **one typed function call**
 - Agents that go from **25% → 92%** because errors are loud
 
 ### typedb.com
@@ -340,11 +382,78 @@ match
 
 </div>
 </div>
+<div id="arc-badge"></div>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
 <script>
-  Reveal.initialize({ hash: true, slideNumber: true, transition: 'none', backgroundTransition: 'none', plugins: [RevealMarkdown, RevealHighlight] });
+  // highlight.js ships no TypeQL grammar and reveal's bundle omits Cypher,
+  // so register minimal grammars; Python is bundled already.
+  function typeqlGrammar(hljs) {
+    return {
+      name: 'TypeQL',
+      keywords: {
+        $pattern: /[a-z_]+/,
+        keyword: 'define undefine redefine match fetch insert delete update ' +
+                 'entity relation attribute struct fun return first last let in ' +
+                 'isa has links sub owns relates plays value as not or try when ' +
+                 'reduce sum count max min mean sort limit offset select distinct',
+        literal: 'true false'
+      },
+      contains: [
+        hljs.HASH_COMMENT_MODE,
+        hljs.QUOTE_STRING_MODE,
+        hljs.C_NUMBER_MODE,
+        { className: 'variable', begin: /\$[\w-]+/ },
+        { className: 'meta', begin: /@[\w-]+(\(([^)]*)\))?/ }
+      ]
+    };
+  }
+  function cypherGrammar(hljs) {
+    return {
+      name: 'Cypher',
+      case_insensitive: true,
+      keywords: {
+        keyword: 'match optional where return create merge delete detach set remove ' +
+                 'with unwind order by asc desc limit skip constraint for require ' +
+                 'is unique not and or xor exists call yield contains starts ends',
+        literal: 'true false null'
+      },
+      contains: [
+        hljs.C_LINE_COMMENT_MODE,
+        hljs.APOS_STRING_MODE,
+        hljs.QUOTE_STRING_MODE,
+        hljs.C_NUMBER_MODE,
+        { className: 'symbol', begin: /:\s*[A-Za-z_][\w]*/ }
+      ]
+    };
+  }
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'none',
+    backgroundTransition: 'none',
+    highlight: {
+      beforeHighlight: hljs => {
+        hljs.registerLanguage('typeql', typeqlGrammar);
+        hljs.registerLanguage('cypher', cypherGrammar);
+      }
+    },
+    plugins: [RevealMarkdown, RevealHighlight]
+  });
+
+  // Persistent arc indicator: each arc's first slide carries data-arc; the
+  // label carries forward until the next data-arc (empty string hides it).
+  const sections = Array.from(document.querySelectorAll('.slides > section'));
+  function updateArcBadge() {
+    const h = Reveal.getIndices().h;
+    let label = '';
+    for (let i = 0; i <= h; i++)
+      if (sections[i].dataset.arc !== undefined) label = sections[i].dataset.arc;
+    document.getElementById('arc-badge').textContent = label;
+  }
+  Reveal.on('ready', updateArcBadge);
+  Reveal.on('slidechanged', updateArcBadge);
 </script>
 </body>
 </html>
