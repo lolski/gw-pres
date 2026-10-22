@@ -19,7 +19,8 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
   - we're not the only one. python started adding type hints. people adopt typescript over javascript. why do we move to more strictly-typed languages?
   - what are type safety benefit for developers?
   - what are type safety benefit for ai agents?
-
+- programming languages have evolved. now it's time for database!
+- show how typedb do null-safety with optionals
 - show how typedb cardinality makes it more type safe vs cypher
   - show typeql vs cypher queries
   - show what's the benefit that typeql has
