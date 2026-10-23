@@ -42,20 +42,21 @@ Whenever show off a feature and making a comparison vs neo4j, use these e-commer
 - good (has price), which can either be a book (has an isbn) or electronic (has warranty-expired-date)
 
 # Distribution / deliverables
-- slides
-  - adopt style from typedb.com website (logo, colour scheme, font etc)
-  - no slide transition animation
-- talking points md file (which will guide me giving the presentation)
+- the talk will be 35 mins in length
+- reveal.js slides
+  - visual style:
+    - adopt style from typedb.com website (logo, colour scheme, font etc)
+    - no slide transition animation
+  - figures:
+    - code snippets with syntax highlighting
+    - graph visualised using graph notation (w edge directionality)
+    - property graph visualised using property graph notation
+  - code blocks:
+    - python, typedb, and cypher code blocks must syntax highlighted
+- talking points md file (which will guide me giving the talk)
 - neo4j and typedb query files which will be embedded into presentation slides. the queries are put into files so they can be tested against against real typedb and neo4j server for correctness. they will be stored into the `neo4j` and `typedb` folder respectively
 
 - presentation slides should be as minimal as possible, and the content be put into "talking points" md file. because not everything i want to say has to be in the slide. the slide can show the figure and code blocks. but the explanation should be in talking points md file.
-- figures:
-  - code snippets with syntax highlighting
-  - graph visualised using graph notation (w edge directionality)
-  - property graph visualised using property graph notation
-- the talk will be 35 mins in length
-- code blocks:
-  - python, typedb, and cypher code blocks must syntax highlighted
 - there are multiple arcs in the presentation. the arc should be displayed to provide context to listeners as to where we are
 
 # Docs / References
