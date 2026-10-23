@@ -97,21 +97,31 @@
 
 - The same three operations that silently misbehaved in Neo4j. Same keystrokes, different database.
 
-## Slide: "1 · Inserting two email addresses" (24:30–26:30)
+## Slide: "1 · Inserting two email addresses" (24:30–26:00)
 
-- **Rejected at commit**: `email` is `@key` — exactly one. Verified live: `[DVL9] key constraint violation … of 'email'`.
+- Two queries on the slide: first insert the user with an email (the one from the happy path), then a **match-insert** adding a second email to that same user.
+- The second query is **rejected at commit**: `email` is `@key` — exactly one. Verified live: `[DVL9] key constraint violation … of 'email'`.
 - The invalid state *cannot be stored*, so no downstream code, report, or agent ever sees it. The error surfaces at the database boundary — not in next quarter's revenue report.
 
-## Slide: "2 · Phone may be absent — no null" (26:30–29:00)
+## Slide: "2 · Phone may be absent" — side by side vs Cypher (26:00–28:00)
 
-- There is no null in TypeDB. Optionality lives in the schema (`@card(0..1)`) and is **explicit in the query**: `try { $u has phone $p; }` — `$p` is bound if present, absent otherwise.
-- No null to propagate through comparisons, no three-valued logic traps.
-- And a typo'd attribute name is a **type error** — the schema knows `phoen` isn't a thing — not an empty column.
+- Left, TypeQL: there is no null. Optionality lives in the schema (`@card(0..1)`) and is **explicit in the query**: `try { $u has phone $p; }` — `$p` bound if present, absent otherwise. No propagation, no three-valued logic. A typo'd attribute name is a **type error**, not an empty column.
+- Right, Cypher (same slide): the arc-3 queries again — missing phone and typo'd property both silently `null`; the no-phone user falls out of both `WHERE u.phone = …` *and* `WHERE NOT u.phone = …`.
 
-## Slide: "3 · Just electronics, just books, all goods" (29:00–32:00)
+## Slide: "3 · Just electronics, just books, all goods" (28:00–29:30)
 
 - Narrow by subtype (`isa book`, `isa electronic`) or query the supertype (`isa good`) — polymorphic, one query, no UNION.
 - The polymorphic result is **guaranteed complete**: every book and electronic is a good by schema. Add `furniture sub good` next sprint — this query already covers it.
+
+## Slide: "price: declared once" — side by side vs Cypher (29:30–30:30)
+
+- Left, TypeQL: `price` is declared exactly once, on abstract `good`; `book` and `electronic` inherit it.
+- Right, the Neo4j graph type fragment: `price` re-declared on `Book` *and* `Electronic` — no abstract supertype, no shared attribute, and nothing stops the two declarations drifting apart (FLOAT here, INTEGER there).
+
+## Slide: "The type system knows what each kind has" (30:30–32:00)
+
+- Top query: fetch `warranty-expired-date` off a `good` → **type error before touching data** (verified: `[QUA4]` type-inference error) — `good` doesn't own it, only `electronic` does. Compare: Neo4j returns a column of nulls.
+- Bottom query: narrow to `electronic` → both `price` (inherited) and `warranty-expired-date` are available. The schema tells you *and the query compiler* exactly what each kind has.
 
 ## Close (32:00–35:00)
 

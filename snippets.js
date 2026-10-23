@@ -15,9 +15,13 @@ window.SNIPPETS = {
  "typedb/queries/02-insert-goods.tql": "insert\n  $b isa book, has price 12.99, has isbn \"978-0135957059\";\n  $e isa electronic, has price 299.0,\n    has warranty-expired-date 2028-10-23;\n",
  "typedb/queries/03-insert-user.tql": "insert\n  $u isa user,\n    has email \"ganesh@typedb.com\",\n    has address \"1 Example St, London\",\n    has phone \"+44 20 7946 0000\";\n",
  "typedb/queries/04-insert-transaction.tql": "match\n  $u isa user, has email \"ganesh@typedb.com\";\n  $b isa book, has isbn \"978-0135957059\";\ninsert\n  $t isa transaction (buyer: $u, item: $b),\n    has amount 12.99,\n    has date 2026-10-23;\n",
- "typedb/queries/05-insert-two-emails.tql": "# the domain says: a user has ONE email.\n# EXPECTED TO FAIL at commit: email is @key (exactly one).\ninsert\n  $u isa user,\n    has email \"ganesh@typedb.com\",\n    has email \"ganesh2@typedb.com\",\n    has address \"1 Example St, London\";\n",
+ "typedb/queries/05-insert-second-email.tql": "# the user already has an email (03). Adding a second one \u2014\n# EXPECTED TO FAIL at commit: email is @key (exactly one).\nmatch\n  $u isa user, has email \"ganesh@typedb.com\";\ninsert\n  $u has email \"ganesh2@typedb.com\";\n",
  "typedb/queries/06-query-phone-optional.tql": "# phone is declared @card(0..1) \u2014 optional. There is no null:\n# absence is explicit, handled with try.\nmatch\n  $u isa user, has email $e;\n  try { $u has phone $p; };\n",
  "typedb/queries/07-query-books.tql": "match $b isa book, has price $p;\n",
  "typedb/queries/08-query-electronics.tql": "match $e isa electronic, has price $p;\n",
- "typedb/queries/09-query-all-goods.tql": "# polymorphic: books AND electronics \u2014 guaranteed complete,\n# because every book/electronic IS a good, by schema.\nmatch $g isa good, has price $p;\n"
+ "typedb/queries/09-query-all-goods.tql": "# polymorphic: books AND electronics \u2014 guaranteed complete,\n# because every book/electronic IS a good, by schema.\nmatch $g isa good, has price $p;\n",
+ "typedb/queries/10-query-good-warranty.tql": "# TYPE ERROR [QUA4], rejected before touching data:\n# good does not own warranty-expired-date \u2014 only electronic does.\nmatch $g isa good;\nfetch { \"warranty\": $g.warranty-expired-date };\n",
+ "typedb/queries/11-query-electronic-fields.tql": "# narrowed to electronic: price (inherited from good) AND warranty\nmatch $e isa electronic;\nfetch { \"price\": $e.price, \"warranty\": $e.warranty-expired-date };\n",
+ "neo4j/queries/fragments/price-twice.cypher": "(:Book => :Good {price :: FLOAT NOT NULL,     // price: declared here\u2026\n                 isbn :: STRING NOT NULL}),\n(:Electronic => :Good {price :: FLOAT NOT NULL,   // \u2026and again here\n                       warrantyExpiredDate :: DATE NOT NULL})\n// no abstract supertype, no shared attribute\n",
+ "typedb/queries/fragments/price-once.tql": "entity good @abstract,\n  owns price @card(1..1);          # price: declared ONCE\nentity book sub good,\n  owns isbn @card(1..1);\nentity electronic sub good,\n  owns warranty-expired-date @card(1..1);\n"
 };

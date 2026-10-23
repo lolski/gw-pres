@@ -26,14 +26,17 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
   - modeling the schema (add cardinality and inheritance)
   - inserting new user, transaction
   - inserting good
+- transition slide: typedb logo
 - ecommerce example in typedb
   - modeling the schema
   - inserting new user, transaction
   - inserting good
 - ecommerce example in typedb (demonstrate type safety)
-  - inserting two email addresses - rejected
-  - querying for a user, of which its phone may be 'null' using 'try' / optionals
+  - inserting two email addresses - insert a new user with an email, followed by match insert on said user. second query should be rejected
+  - querying for a user, of which its phone may be 'null' using 'try' / optionals. compare it side by side with neo4j
   - querying for just electronic, just book, and all goods
+    - price is a shared field, declared exactly once at 'good'. compare it with neo4j side by side where in neo4j price has to be redeclared for both electronic and book.
+    - when querying for goods, can't access isbn and warranty field. when querying specifically for electronic, price and warranty is available
 
 # Examples: Ecommerce
 Whenever show off a feature and making a comparison vs neo4j, use these e-commerce examples. Here are the "entities" and how they're related to others:

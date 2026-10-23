@@ -1,0 +1,6 @@
+entity good @abstract,
+  owns price @card(1..1);          # price: declared ONCE
+entity book sub good,
+  owns isbn @card(1..1);
+entity electronic sub good,
+  owns warranty-expired-date @card(1..1);

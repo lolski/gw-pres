@@ -1,0 +1,3 @@
+# narrowed to electronic: price (inherited from good) AND warranty
+match $e isa electronic;
+fetch { "price": $e.price, "warranty": $e.warranty-expired-date };

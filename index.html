@@ -38,6 +38,11 @@
     .graphfig .node { fill: none; stroke: var(--td-blue); stroke-width: 3; }
     .graphfig .rel { fill: var(--td-green); font-size: 17px; }
     .graphfig .prop { fill: var(--td-muted); font-size: 15px; }
+    .reveal .cols { display: flex; gap: 0.8em; align-items: flex-start; }
+    .reveal .cols > div { flex: 1; min-width: 0; }
+    .reveal .cols h3 { font-size: 0.65em; margin-bottom: 0.3em; }
+    .reveal .cols pre { margin: 0; }
+    .reveal .cols pre code { font-size: 0.52em; line-height: 1.35; }
     #arc-badge {
       position: fixed; top: 18px; right: 18px; z-index: 10;
       font-family: var(--r-main-font); font-size: 15px; color: var(--td-muted);
@@ -189,12 +194,22 @@
 
 <section>
   <h2>1 · Inserting two email addresses</h2>
-  <pre><code class="language-typeql" data-snippet-src="typedb/queries/05-insert-two-emails.tql"></code></pre>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/03-insert-user.tql"></code></pre>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/05-insert-second-email.tql"></code></pre>
 </section>
 
 <section>
-  <h2>2 · Phone may be absent — no null</h2>
-  <pre><code class="language-typeql" data-snippet-src="typedb/queries/06-query-phone-optional.tql"></code></pre>
+  <h2>2 · Phone may be absent</h2>
+  <div class="cols">
+    <div>
+      <h3 class="good">TypeQL</h3>
+      <pre><code class="language-typeql" data-snippet-src="typedb/queries/06-query-phone-optional.tql"></code></pre>
+    </div>
+    <div>
+      <h3 class="bad">Cypher</h3>
+      <pre><code class="language-cypher" data-snippet-src="neo4j/queries/08-query-phone-null.cypher"></code></pre>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -202,6 +217,26 @@
   <pre><code class="language-typeql" data-snippet-src="typedb/queries/07-query-books.tql"></code></pre>
   <pre><code class="language-typeql" data-snippet-src="typedb/queries/08-query-electronics.tql"></code></pre>
   <pre><code class="language-typeql" data-snippet-src="typedb/queries/09-query-all-goods.tql"></code></pre>
+</section>
+
+<section>
+  <h2>price: declared once</h2>
+  <div class="cols">
+    <div>
+      <h3 class="good">TypeQL</h3>
+      <pre><code class="language-typeql" data-snippet-src="typedb/queries/fragments/price-once.tql"></code></pre>
+    </div>
+    <div>
+      <h3 class="bad">Cypher graph type</h3>
+      <pre><code class="language-cypher" data-snippet-src="neo4j/queries/fragments/price-twice.cypher"></code></pre>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The type system knows what each kind has</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/10-query-good-warranty.tql"></code></pre>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/11-query-electronic-fields.tql"></code></pre>
 </section>
 
 </div>

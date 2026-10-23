@@ -1,0 +1,6 @@
+# the user already has an email (03). Adding a second one —
+# EXPECTED TO FAIL at commit: email is @key (exactly one).
+match
+  $u isa user, has email "ganesh@typedb.com";
+insert
+  $u has email "ganesh2@typedb.com";

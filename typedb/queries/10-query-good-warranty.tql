@@ -1,0 +1,4 @@
+# TYPE ERROR [QUA4], rejected before touching data:
+# good does not own warranty-expired-date — only electronic does.
+match $g isa good;
+fetch { "warranty": $g.warranty-expired-date };

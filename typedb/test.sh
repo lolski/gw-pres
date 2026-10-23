@@ -3,7 +3,8 @@
 # in this folder (start it with:  ./typedb-all-mac-arm64-3.14.1/typedb server).
 # Recreates the `ecommerce` database, then runs each queries/*.tql in order —
 # schema files in a schema transaction, insert files in write, the rest in read.
-# 05 (two emails) is EXPECTED to fail: commit violates email @key.
+# EXPECTED failures: 05 (second email violates @key at commit) and
+# 10 (good doesn't own warranty-expired-date — type error).
 cd "$(dirname "$0")"
 DIST="${TYPEDB_DIST:-typedb-all-mac-arm64-3.14.1}"
 ADDR="${TYPEDB_ADDRESS:-localhost:1729}"
@@ -30,7 +31,7 @@ for f in queries/*.tql; do
     echo "--- OK"
   else
     echo "--- FAILED"
-    case "$f" in *05-insert-two-emails*) ;; *) fail=1 ;; esac
+    case "$f" in *05-insert-second-email*|*10-query-good-warranty*) ;; *) fail=1 ;; esac
   fi
 done
 exit $fail

@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 python3 - <<'EOF'
 import json, pathlib
 snips = {str(p): p.read_text()
-         for pat in ("neo4j/queries/*", "typedb/queries/*")
+         for pat in ("neo4j/queries/*", "typedb/queries/*", "neo4j/queries/fragments/*", "typedb/queries/fragments/*")
          for p in sorted(pathlib.Path().glob(pat))
          if p.suffix in (".cypher", ".tql")}
 pathlib.Path("snippets.js").write_text(
