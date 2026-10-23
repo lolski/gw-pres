@@ -73,8 +73,8 @@
   <p class="small">Ganeshwara Hananda · TypeDB</p>
 </section>
 
-<!-- ============ ARC 1 — A GRAPH: NODES AND EDGES ============ -->
-<section data-arc="Arc 1 · A graph: nodes and edges">
+<!-- ============ ARC 1 — NEO4J AND THE PROPERTY GRAPH ============ -->
+<section data-arc="Arc 1 · Neo4j and the property graph">
   <h2>A graph: nodes and edges</h2>
   <svg class="graphfig" viewBox="0 0 760 360" role="img" aria-label="A plain directed graph: four anonymous nodes connected by directed edges">
     <defs>
@@ -95,8 +95,7 @@
   nodes and edges: which one is the user? what does this arrow mean?</p>
 </section>
 
-<!-- ============ ARC 2 — NEO4J'S PROPERTY GRAPH ============ -->
-<section data-arc="Arc 2 · Neo4j’s property graph">
+<section>
   <h2>Neo4j: the labeled property graph</h2>
   <svg class="graphfig" viewBox="0 0 760 360" role="img" aria-label="Property graph notation: labeled nodes with property maps and typed directed relationships">
     <defs>
@@ -114,7 +113,7 @@
     <text x="180" y="186" text-anchor="middle">:User</text>
     <text class="prop" x="180" y="240" text-anchor="middle">{email, address, phone?}</text>
     <text x="390" y="116" text-anchor="middle" font-size="15">:Transaction</text>
-    <text class="prop" x="390" y="62" text-anchor="middle">{amount, paymentMethod, date}</text>
+    <text class="prop" x="390" y="62" text-anchor="middle">{amount, date}</text>
     <text x="600" y="96" text-anchor="middle" font-size="14">:Good:Book</text>
     <text class="prop" x="600" y="42" text-anchor="middle">{price, isbn}</text>
     <text x="580" y="266" text-anchor="middle" font-size="11">:Good:Electronic</text>
@@ -136,10 +135,10 @@ The picture now has names — you can ask "all users",
 "everything this transaction contains".
 </textarea></section>
 
-<!-- ============ ARC 3 — ECOMMERCE IN NEO4J: HAPPY PATH ============ -->
-<section data-arc="Arc 3 · Ecommerce in Neo4j — happy path">
+<!-- ============ ARC 2 — ECOMMERCE IN NEO4J: HAPPY PATH ============ -->
+<section data-arc="Arc 2 · Ecommerce in Neo4j — happy path">
   <h2>Modeling the schema: graph types</h2>
-  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/01-schema-graph-type.cypher"></code></pre>
+  <pre><code class="language-cypher" data-snippet-src="neo4j/queries/01-schema-graph-type.cypher"></code></pre>
   <p class="small">Neo4j's best effort: typed properties, required fields, keys, implied labels
   (<code>:Book => :Good</code>), relationship endpoints. On <strong>Community</strong> edition the
   vocabulary is one line: <code>CREATE CONSTRAINT … REQUIRE u.email IS UNIQUE</code>.</p>
@@ -147,19 +146,19 @@ The picture now has names — you can ask "all users",
 
 <section>
   <h2>Inserting a user and a transaction</h2>
-  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/04-insert-user-transaction.cypher"></code></pre>
+  <pre><code class="language-cypher" data-snippet-src="neo4j/queries/04-insert-user-transaction.cypher"></code></pre>
   <p class="small">Clean and readable — Cypher's pattern syntax is genuinely nice.</p>
 </section>
 
 <section>
   <h2>Inserting goods</h2>
-  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/03-insert-goods.cypher"></code></pre>
+  <pre><code class="language-cypher" data-snippet-src="neo4j/queries/03-insert-goods.cypher"></code></pre>
   <p class="small">Multi-labels (<code>:Good:Book</code>) stand in for "a book <em>is a</em> good" —
   by convention, not by rule. Hold that thought.</p>
 </section>
 
-<!-- ============ ARC 4 — ECOMMERCE IN NEO4J: UNHAPPY PATH ============ -->
-<section data-markdown data-arc="Arc 4 · Ecommerce in Neo4j — unhappy path"><textarea data-template>
+<!-- ============ ARC 3 — ECOMMERCE IN NEO4J: UNHAPPY PATH ============ -->
+<section data-markdown data-arc="Arc 3 · Ecommerce in Neo4j — unhappy path"><textarea data-template>
 # The unhappy path
 
 Same shop, three everyday operations —
@@ -172,7 +171,7 @@ run on Community edition, where graph types don't exist:
 
 <section>
   <h2>1 · Inserting two email addresses</h2>
-  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/05-insert-two-emails.cypher"></code></pre>
+  <pre><code class="language-cypher" data-snippet-src="neo4j/queries/05-insert-two-emails.cypher"></code></pre>
   <p class="small">The uniqueness constraint doesn't even see it. A graph type's
   <code>email :: STRING</code> would catch this — but that's Enterprise 2026.02+;
   everywhere else, the "schema" can't say <em>one email per user</em>.</p>
@@ -180,7 +179,7 @@ run on Community edition, where graph types don't exist:
 
 <section>
   <h2>2 · Querying for all goods</h2>
-  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/07-query-all-goods.cypher"></code></pre>
+  <pre><code class="language-cypher" data-snippet-src="neo4j/queries/07-query-all-goods.cypher"></code></pre>
   <p class="small">Multi-labels are convention: nothing makes a <code>:Book</code> a
   <code>:Good</code> (graph types' implied labels fix this — again, Enterprise 2026.02+),
   so "all goods" is only as complete as everyone's memory.</p>
@@ -188,15 +187,73 @@ run on Community edition, where graph types don't exist:
 
 <section>
   <h2>3 · Querying a user whose phone may be null</h2>
-  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/08-query-phone-null.cypher"></code></pre>
+  <pre><code class="language-cypher" data-snippet-src="neo4j/queries/08-query-phone-null.cypher"></code></pre>
   <p class="small">"Optional" is declared nowhere — absence and typo are indistinguishable,
   and null propagates through three-valued logic. Bugs no tool warns you about.</p>
+</section>
+
+<!-- ============ ARC 4 — ECOMMERCE IN TYPEDB: HAPPY PATH ============ -->
+<section data-arc="Arc 4 · Ecommerce in TypeDB — happy path">
+  <h2>Modeling the schema</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/01-schema.tql"></code></pre>
+  <p class="small">The whole domain, enforced in any edition: keys, <strong>cardinality</strong>
+  (<code>@card(0..1)</code> phone, <code>@card(1..)</code> items) and <strong>inheritance</strong>
+  (<code>book sub good</code>, with <code>good</code> abstract).</p>
+</section>
+
+<section>
+  <h2>Inserting goods</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/02-insert-goods.tql"></code></pre>
+  <p class="small"><code>book</code> and <code>electronic</code> <em>are</em> goods by schema —
+  no label to remember, nothing to forget.</p>
+</section>
+
+<section>
+  <h2>Inserting a user and a transaction</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/03-insert-user.tql"></code></pre>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/04-insert-transaction.tql"></code></pre>
+</section>
+
+<!-- ============ ARC 5 — TYPEDB: TYPE SAFETY ============ -->
+<section data-markdown data-arc="Arc 5 · TypeDB — type safety"><textarea data-template>
+# The unhappy path, revisited
+
+The same three operations that silently misbehaved in Neo4j:
+
+1. Inserting a user with **two email addresses**
+2. Querying a user whose **phone may be absent**
+3. Querying **just electronics, just books, all goods**
+</textarea></section>
+
+<section>
+  <h2>1 · Inserting two email addresses</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/05-insert-two-emails.tql"></code></pre>
+  <p class="small"><strong>Rejected at commit</strong>: <code>email</code> is <code>@key</code> —
+  exactly one. The invalid state can't be stored, so no downstream code ever sees it.</p>
+</section>
+
+<section>
+  <h2>2 · Phone may be absent — no null</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/06-query-phone-optional.tql"></code></pre>
+  <p class="small">Optionality is in the schema (<code>@card(0..1)</code>) and explicit in the
+  query (<code>try</code>): <code>$p</code> is bound if present, absent otherwise. No null to
+  propagate, and a typo'd attribute is a <strong>type error</strong>, not an empty column.</p>
+</section>
+
+<section>
+  <h2>3 · Just electronics, just books, all goods</h2>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/07-query-books.tql"></code></pre>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/08-query-electronics.tql"></code></pre>
+  <pre><code class="language-typeql" data-snippet-src="typedb/queries/09-query-all-goods.tql"></code></pre>
+  <p class="small">The polymorphic query is <strong>guaranteed complete</strong> — the schema
+  makes every book and electronic a good; there is no "forgot the label".</p>
 </section>
 
 </div>
 </div>
 <div id="arc-badge"></div>
 <div id="logo-badge"><svg><use href="#typedb-logo"/></svg></div>
+<script src="snippets.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
@@ -271,19 +328,30 @@ run on Community edition, where graph types don't exist:
   Reveal.on('ready', updateArcBadge);
   Reveal.on('slidechanged', updateArcBadge);
 
-  // Cypher snippets live in neo4j/queries/*.cypher so the exact same files can
-  // be tested against a real Neo4j (neo4j/test.sh); fetch them into the deck.
-  const hlPlugin = Reveal.getPlugin('highlight');
-  document.querySelectorAll('code[data-cypher-src]').forEach(async el => {
-    const path = el.dataset.cypherSrc;
-    try {
-      const res = await fetch(path);
-      if (!res.ok) throw new Error(res.status);
-      el.textContent = (await res.text()).trim();
-    } catch {
-      el.textContent = `// failed to load ${path}\n// serve the deck over http, e.g.  python3 -m http.server`;
-    }
-    hlPlugin.hljs.highlightElement(el);
+  // Snippets live in neo4j/queries/*.cypher and typedb/queries/*.tql so the
+  // exact same files can be tested (neo4j/test.sh, typedb/test.sh); fetch them.
+  // Must run on 'ready': before that the highlight plugin (and its typeql/cypher
+  // grammars) isn't registered yet, so the injected code would render unhighlighted.
+  Reveal.on('ready', () => {
+    const hljs = Reveal.getPlugin('highlight').hljs;
+    document.querySelectorAll('code[data-snippet-src]').forEach(async el => {
+      const path = el.dataset.snippetSrc;
+      let text;
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(res.status);
+        text = await res.text();
+      } catch {
+        // file:// blocks fetch — fall back to snippets.js (regenerate with ./build-snippets.sh)
+        text = window.SNIPPETS?.[path]
+          ?? `// failed to load ${path}\n// run ./build-snippets.sh, or serve over http`;
+      }
+      el.textContent = text.trim();
+      // the plugin already highlighted this block while it was empty, and hljs
+      // refuses to re-highlight unless the marker is cleared
+      delete el.dataset.highlighted;
+      hljs.highlightElement(el);
+    });
   });
 </script>
 </body>

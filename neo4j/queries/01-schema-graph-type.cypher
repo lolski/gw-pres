@@ -9,7 +9,6 @@ ALTER CURRENT GRAPH TYPE SET {
   (:Electronic => :Good {price :: FLOAT NOT NULL,
                          warrantyExpiredDate :: DATE NOT NULL}),
   (:Transaction => {amount :: FLOAT NOT NULL,
-                    paymentMethod :: STRING NOT NULL,
                     date :: DATE NOT NULL}),
   (:Transaction)-[:BUYER =>]->(:User),
   (:Transaction)-[:CONTAINS =>]->(:Good)

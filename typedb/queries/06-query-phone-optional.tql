@@ -1,0 +1,5 @@
+# phone is declared @card(0..1) — optional. There is no null:
+# absence is explicit, handled with try.
+match
+  $u isa user, has email $e;
+  try { $u has phone $p; };

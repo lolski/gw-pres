@@ -1,0 +1,3 @@
+# polymorphic: books AND electronics — guaranteed complete,
+# because every book/electronic IS a good, by schema.
+match $g isa good, has price $p;

@@ -1,120 +1,62 @@
 # Bringing Type Systems into the Graph World
-### Target 35 min · current outline covers the opening four arcs (~17 min) — more to come as CLAUDE.md grows
+### 35 min · five arcs: property graphs → Neo4j happy/unhappy → TypeDB happy/type-safe
 
-**Running example:** `user` (email, address, optional phone) — `transaction` (user + goods; amount, payment-method, date) — `good` (price), either a `book` (isbn) or an `electronic` (warranty-expired-date)
+**Running example:** `user` (email, address, optional phone) — `transaction` (user + goods; amount, date) — `good` (price), either a `book` (isbn) or an `electronic` (warranty-expired-date)
+
+**All snippets live in files** — `neo4j/queries/*.cypher` and `typedb/queries/*.tql` — fetched into the deck at render time and testable (`neo4j/test.sh` against real Community/Enterprise instances, `typedb/test.sh` via `typeql-check`). Edit the file, both update.
 
 ---
 
-# ARC 1 — A graph: nodes and edges
+# ARC 1 — Neo4j and the property graph
 
-## 1. What a graph is (0:00–3:00)
+## 1. From dots-and-lines to a property graph (0:00–5:00)
 
-- The purest model: **nodes** and **edges**. Dots and lines. That's the whole data model.
-- On the slide: the ecommerce domain drawn in plain directed-graph notation — anonymous circles, arrows showing edge direction, nothing else.
-- The power: relationships are first-class. No join tables, no foreign keys — the connection *is* the data.
-- The poverty: a plain graph says nothing *about* the dots and lines. Which circle is the user? What does this edge mean?
+- Plain directed graph (figure, graph notation): nodes, directed edges, nothing else. Relationships are first-class — no join tables — but the graph says nothing *about* the nodes and edges.
+- Same picture in property-graph notation (figure): Neo4j adds **labels** (`:User`, multi-label `:Good:Book`), **key-value properties**, **typed directed relationships** (`:BUYER`, `:CONTAINS`).
+- Now the picture has names: "all users", "everything this transaction contains".
 
-# ARC 2 — Neo4j's property graph
+# ARC 2 — Ecommerce in Neo4j: the happy path
 
-## 2. What Neo4j adds on top (3:00–7:00)
+## 2. Building the shop (5:00–10:00)
 
-Same picture, redrawn in property-graph notation (labels inside nodes, property maps beside them, typed directed edges). Neo4j's **labeled property graph** adds three things:
+- **Schema with graph types** (`01-schema-graph-type.cypher`) — Neo4j's best effort and genuinely a big step: typed properties, `NOT NULL`, `IS KEY`, implied labels (`:Book => :Good`), relationship endpoints. Land verbally: Cypher 25, **Enterprise only** (GA 2026.06); on Community the entire vocabulary is one uniqueness constraint (`02`). Note `price` re-declared per kind — no shared supertype attribute, no abstractness.
+- **Inserting goods** (`03`), **user + transaction** (`04`). Be fair: Cypher's pattern syntax is genuinely pleasant.
 
-1. **Labels** on nodes: `:User`, `:Transaction`, multi-labels like `:Good:Book`.
-2. **Key-value properties** on nodes and relationships: `{email: "...", amount: 12.99}`.
-3. **Typed, directed relationships**: `(:Transaction)-[:BUYER]->(:User)`, `-[:CONTAINS]->`.
+# ARC 3 — Ecommerce in Neo4j: the unhappy path
 
-The picture now has names: you can ask "all users", "everything this transaction contains".
+## 3. Same shop, three everyday operations (10:00–17:00)
 
-# ARC 3 — Ecommerce in Neo4j: the happy path
+Framed on **Community** (like the local demo — and any pre-2026 install): see `neo4j/queries.md` for the verified per-edition outcome table.
 
-## 3. Building the shop (7:00–11:00)
+- **Two email addresses** (`05`): a list-valued `email` commits; a list wrapping an existing email slips past the uniqueness constraint. (Graph type would catch it — Enterprise price of admission.)
+- **Querying all goods** (`07`): the `:Book` that forgot `:Good` is silently missing from the revenue report. (Implied labels fix this — again Enterprise.)
+- **Phone may be null** (`08`): absence and typo both yield `null`; `WHERE u.phone = …` and `WHERE NOT u.phone = …` both drop the no-phone user — three-valued logic.
+- If asked about Enterprise: `09`/`10` show the graph type catching the first two, and what *still* slips through even there — open rel types, no cardinality (a goods-less transaction commits). That's the segue.
 
-**3a. Modeling the schema — graph types** (Cypher 25, Neo4j 2026.02+, Enterprise only):
-```cypher
-ALTER CURRENT GRAPH TYPE SET {
-  (:User => {email :: STRING IS KEY,
-             address :: STRING NOT NULL,
-             phone :: STRING}),
-  (:Book => :Good {price :: FLOAT NOT NULL, isbn :: STRING NOT NULL}),
-  (:Electronic => :Good {price :: FLOAT NOT NULL,
-                         warrantyExpiredDate :: DATE NOT NULL}),
-  (:Transaction => {amount :: FLOAT NOT NULL,
-                    paymentMethod :: STRING NOT NULL,
-                    date :: DATE NOT NULL}),
-  (:Transaction)-[:BUYER =>]->(:User),
-  (:Transaction)-[:CONTAINS =>]->(:Good)
-}
-```
-Neo4j's best effort, and genuinely a big step: typed properties, `NOT NULL`, keys, implied labels (`:Book => :Good`), relationship endpoints. Caveats to land verbally: Enterprise-only, brand new (2026.02), opt-in — and on Community the entire vocabulary is `CREATE CONSTRAINT … REQUIRE u.email IS UNIQUE`. Note `price` must be re-declared on each kind: no shared supertype attribute, no abstractness. Ref: https://neo4j.com/docs/cypher-manual/current/schema/
+# ARC 4 — Ecommerce in TypeDB: the happy path
 
-**3b. Inserting a user and a transaction:**
-```cypher
-CREATE (:User {email: "ganesh@typedb.com",
-               address: "1 Example St, London",
-               phone: "+44 20 7946 0000"});
+## 4. The same shop, typed (17:00–24:00)
 
-MATCH (u:User {email: "ganesh@typedb.com"}),
-      (b:Book {isbn: "978-0135957059"})
-CREATE (u)<-[:BUYER]-(:Transaction {amount: 12.99,
-        paymentMethod: "card", date: date("2026-10-23")})
-       -[:CONTAINS]->(b);
-```
-Be fair to Neo4j here: the pattern syntax is genuinely nice to read and write.
+- **Schema** (`typedb/queries/01-schema.tql`) — the whole domain, enforced in any edition: attributes with value types, `@key` email, **cardinality** (`@card(0..1)` phone, `@card(1..)` items per transaction, exactly one buyer), **inheritance** (`good @abstract`, `book sub good`, `electronic sub good` — `price` declared once on the supertype).
+- **Inserting goods** (`02`): a book *is* a good by schema — no label to remember.
+- **Inserting user + transaction** (`03`, `04`).
 
-**3c. Inserting goods:**
-```cypher
-CREATE (:Good:Book {price: 12.99, isbn: "978-0135957059"});
-CREATE (:Good:Electronic {price: 299.0,
-        warrantyExpiredDate: date("2028-10-23")});
-```
-Multi-labels stand in for "a book *is a* good" — by convention, not by rule. Hold that thought.
+# ARC 5 — TypeDB: type safety
 
-# ARC 4 — Ecommerce in Neo4j: the unhappy path
+## 5. The unhappy path, revisited (24:00–32:00)
 
-## 4. Same shop, three everyday operations (11:00–17:00)
+The same operations that silently misbehaved in Neo4j:
 
-Framing: these run on **Community edition** (like the local demo), where graph types don't exist — which is also every Neo4j below 2026.02. Where a graph type *would* catch the problem, say so and note the price of admission (Enterprise, opt-in).
+- **Two emails** (`05`): **rejected at commit** — `email` is `@key`, exactly one. The invalid state can't be stored; no downstream code ever sees it.
+- **Phone may be absent** (`06`): no null exists. Optionality is in the schema (`@card(0..1)`) and explicit in the query (`try { $u has phone $p; }`) — `$p` bound if present, absent otherwise. A typo'd attribute name is a type error, not an empty column.
+- **Just electronics, just books, all goods** (`07`–`09`): narrow by subtype or query the supertype — the polymorphic `$g isa good` is **guaranteed complete**; "forgot the label" cannot exist.
 
-**4a. Inserting a user with two email addresses:**
-```cypher
-// the domain says: a user has ONE email.
-CREATE (:User {email: ["ganesh@typedb.com", "ganesh2@typedb.com"],
-               address: "1 Example St, London"});
-// commits — any property can silently become a list
-
-// and the uniqueness constraint? it compares whole values,
-// so a list containing an existing email ALSO commits:
-CREATE (:User {email: ["ganesh@typedb.com"], address: "2 Example St, London"});
-```
-The uniqueness constraint doesn't even see it. A graph type's `email :: STRING` would catch this — but that's Enterprise 2026.02+; everywhere else the "schema" can't say *one email per user*.
-
-**4b. Querying for all goods:**
-```cypher
-// six months ago, someone forgot a label:
-CREATE (:Book {price: 8.0, isbn: "978-1593272821"});
-
-// today, revenue report:
-MATCH (g:Good) RETURN g;
-// that book is not in the results. No error, no warning.
-```
-Multi-labels are convention: nothing makes a `:Book` a `:Good` (graph types' implied labels fix this — again Enterprise 2026.02+), so "all goods" is only as complete as everyone's memory.
-
-**4c. Querying a user whose phone may be null:**
-```cypher
-MATCH (u:User) RETURN u.phone              // no phone → null; typo'd u.phoen → ALSO null
-MATCH (u:User) WHERE u.phone = "..."       // null: row silently dropped
-MATCH (u:User) WHERE NOT u.phone = "..."   // null: ALSO silently dropped
-```
-"Optional" is declared nowhere — absence and typo are indistinguishable; null propagates through three-valued logic. Bugs no tool warns about.
-
-→ This is the cliffhanger the TypeDB arcs resolve.
+Wrap (32:00–35:00): same graph-shaped data, but the contract lives in the database. Blogs to cite: *How strict should your schema be?* · *Benchmarking LLM query generation…* (typedb.com/blog). Q&A.
 
 ---
 
 ## Speaker notes
-- The deck shows a persistent arc badge (top-right) so listeners know which arc we're in.
-- Deck is styled to typedb.com's brand: official logo (inline SVG, title slide + top-left corner), purple background `#1a182a`, green/red/blue accents (`#02dac9`/`#e96464`/`#7ba0ff`), Monaco for code. Their "Darkmode" webfont is licensed, so the deck falls back to Helvetica.
-- All arc 3/4 Cypher is runnable against the local demo in `neo4j/` (auth disabled, `cypher-shell`); `neo4j/queries.md` has the full script — note it still uses the old domain (user has `name`, electronics with `warrantyMonths`) and should be refreshed before a live run.
-- No TypeQL in the deck yet; when it returns, validate every snippet with `typeql-check`.
-- Cypher semantics reference: https://neo4j.com/docs/cypher-manual/current/ (constraints, null behavior, list properties).
+- Arc badge top-right tracks the five arcs; TypeDB logo top-left (brand styling from typedb.com).
+- Demos: `neo4j/` has Community 2025.09 **and** Enterprise 2026.09 (run one at a time; `NEO4J_DIST=… ./test.sh`). `typedb/test.sh` runs all 9 TypeQL files against a **real TypeDB server** (`typedb server`, brew) — verified: all pass, with `05` failing at commit by design (`[DVL9]` email key violation). Outcome table in `typedb/queries.md`.
+- The deck fetches snippets over HTTP — serve locally with `python3 -m http.server` (file:// won't load them).
+- Neo4j schema docs: https://neo4j.com/docs/cypher-manual/current/schema/

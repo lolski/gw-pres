@@ -1,4 +1,6 @@
-# Description
+# Talk
+
+## Description
 
 Below is the description i gave to the organiser. The presentation should expand on these topics.
 
@@ -9,22 +11,7 @@ Traditional graph databases excel at representing complex connections, but raw n
 
 TypeDB lets one declare constraints on graphs by borrowing various concepts from type systems as commonly found in programming languages. By bringing concepts such as inheritance and type inference, TypeDB enables you to enforce strong structure whilst maintaining flexibility and expressiveness of graph data structures, thus improving the reliability of services and AI agents that interface with the database.
 
-# Presentation Format
-- presentation slides
-- figures:
-  - code snippets with syntax highlighting
-  - graph visualised using graph notation (w edge directionality)
-  - property graph visualised using property graph notation
-- 35 mins in length
-- code blocks:
-  - python, typedb, and cypher code blocks must syntax highlighted
-- there are multiple arcs in the presentation. the arc should be displayed to provide context to listeners as to where we are
-
-# Style guide
-- adopt style from typedb.com website (logo, colour scheme, font etc)
-- no slide transition animation
-
-# Presentation
+## Talk Content
 
 - neo4j and property graph: illustrate using diagram depicting the ecommerce domain
 - ecommerce example in neo4j (happy path)
@@ -54,7 +41,24 @@ Whenever show off a feature and making a comparison vs neo4j, use these e-commer
 - transaction (associated with a user and goods. has amount, date)
 - good (has price), which can either be a book (has an isbn) or electronic (has warranty-expired-date)
 
-# Sources
+# Distribution / deliverables
+- slides
+  - adopt style from typedb.com website (logo, colour scheme, font etc)
+  - no slide transition animation
+- talking points md file (which will guide me giving the presentation)
+- neo4j and typedb query files which will be embedded into presentation slides. the queries are put into files so they can be tested against against real typedb and neo4j server for correctness. they will be stored into the `neo4j` and `typedb` folder respectively
+
+- presentation slides should be as minimal as possible, and the content be put into "talking points" md file. because not everything i want to say has to be in the slide. the slide can show the figure and code blocks. but the explanation should be in talking points md file.
+- figures:
+  - code snippets with syntax highlighting
+  - graph visualised using graph notation (w edge directionality)
+  - property graph visualised using property graph notation
+- the talk will be 35 mins in length
+- code blocks:
+  - python, typedb, and cypher code blocks must syntax highlighted
+- there are multiple arcs in the presentation. the arc should be displayed to provide context to listeners as to where we are
+
+# Docs / References
 Here are sources you can reference
 - two blogs that you should reference
   - https://typedb.com/blog/how-strict-should-your-schema-be

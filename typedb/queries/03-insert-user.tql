@@ -1,0 +1,5 @@
+insert
+  $u isa user,
+    has email "ganesh@typedb.com",
+    has address "1 Example St, London",
+    has phone "+44 20 7946 0000";

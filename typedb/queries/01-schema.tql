@@ -1,0 +1,27 @@
+define
+  attribute email value string;
+  attribute address value string;
+  attribute phone value string;
+  attribute amount value double;
+  attribute date value date;
+  attribute price value double;
+  attribute isbn value string;
+  attribute warranty-expired-date value date;
+
+  entity user,
+    owns email @key,
+    owns address @card(1..1),
+    owns phone @card(0..1),
+    plays transaction:buyer;
+
+  entity good @abstract,
+    owns price @card(1..1),
+    plays transaction:item;
+  entity book sub good, owns isbn @card(1..1);
+  entity electronic sub good, owns warranty-expired-date @card(1..1);
+
+  relation transaction,
+    relates buyer @card(1..1),
+    relates item @card(1..),
+    owns amount @card(1..1),
+    owns date @card(1..1);

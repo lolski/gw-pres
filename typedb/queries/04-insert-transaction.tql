@@ -1,0 +1,7 @@
+match
+  $u isa user, has email "ganesh@typedb.com";
+  $b isa book, has isbn "978-0135957059";
+insert
+  $t isa transaction (buyer: $u, item: $b),
+    has amount 12.99,
+    has date 2026-10-23;

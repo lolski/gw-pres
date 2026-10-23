@@ -1,0 +1,4 @@
+insert
+  $b isa book, has price 12.99, has isbn "978-0135957059";
+  $e isa electronic, has price 299.0,
+    has warranty-expired-date 2028-10-23;
