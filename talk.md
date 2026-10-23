@@ -26,17 +26,27 @@ Same picture, redrawn in property-graph notation (labels inside nodes, property 
 
 The picture now has names: you can ask "all users", "everything this transaction contains".
 
-# ARC 3 — Ecommerce in Neo4j
+# ARC 3 — Ecommerce in Neo4j: the happy path
 
 ## 3. Building the shop (7:00–11:00)
 
-**3a. Modeling the schema — if such a thing exists:**
+**3a. Modeling the schema — graph types** (Cypher 25, Neo4j 2026.02+, Enterprise only):
 ```cypher
-CREATE CONSTRAINT user_email FOR (u:User) REQUIRE u.email IS UNIQUE;
-// that's it — that's the whole schema.
-// (property existence constraints: Enterprise-only)
+ALTER CURRENT GRAPH TYPE SET {
+  (:User => {email :: STRING IS KEY,
+             address :: STRING NOT NULL,
+             phone :: STRING}),
+  (:Book => :Good {price :: FLOAT NOT NULL, isbn :: STRING NOT NULL}),
+  (:Electronic => :Good {price :: FLOAT NOT NULL,
+                         warrantyExpiredDate :: DATE NOT NULL}),
+  (:Transaction => {amount :: FLOAT NOT NULL,
+                    paymentMethod :: STRING NOT NULL,
+                    date :: DATE NOT NULL}),
+  (:Transaction)-[:BUYER =>]->(:User),
+  (:Transaction)-[:CONTAINS =>]->(:Good)
+}
 ```
-Community edition can declare **uniqueness**; that's the entire vocabulary. Labels, properties, relationship endpoints — declared nowhere; the model lives in your head.
+Neo4j's best effort, and genuinely a big step: typed properties, `NOT NULL`, keys, implied labels (`:Book => :Good`), relationship endpoints. Caveats to land verbally: Enterprise-only, brand new (2026.02), opt-in — and on Community the entire vocabulary is `CREATE CONSTRAINT … REQUIRE u.email IS UNIQUE`. Note `price` must be re-declared on each kind: no shared supertype attribute, no abstractness. Ref: https://neo4j.com/docs/cypher-manual/current/schema/
 
 **3b. Inserting a user and a transaction:**
 ```cypher
@@ -60,39 +70,43 @@ CREATE (:Good:Electronic {price: 299.0,
 ```
 Multi-labels stand in for "a book *is a* good" — by convention, not by rule. Hold that thought.
 
-# ARC 4 — Can we model this in Neo4j?
+# ARC 4 — Ecommerce in Neo4j: the unhappy path
 
-## 4. Three modeling questions (11:00–17:00) — each gets a slide, each answer is "no"
+## 4. Same shop, three everyday operations (11:00–17:00)
 
-**4a. A null-safe query for the user's optional phone?**
+Framing: these run on **Community edition** (like the local demo), where graph types don't exist — which is also every Neo4j below 2026.02. Where a graph type *would* catch the problem, say so and note the price of admission (Enterprise, opt-in).
+
+**4a. Inserting a user with two email addresses:**
+```cypher
+// the domain says: a user has ONE email.
+CREATE (:User {email: ["ganesh@typedb.com", "ganesh2@typedb.com"],
+               address: "1 Example St, London"});
+// commits — any property can silently become a list
+
+// and the uniqueness constraint? it compares whole values,
+// so a list containing an existing email ALSO commits:
+CREATE (:User {email: ["ganesh@typedb.com"], address: "2 Example St, London"});
+```
+The uniqueness constraint doesn't even see it. A graph type's `email :: STRING` would catch this — but that's Enterprise 2026.02+; everywhere else the "schema" can't say *one email per user*.
+
+**4b. Querying for all goods:**
+```cypher
+// six months ago, someone forgot a label:
+CREATE (:Book {price: 8.0, isbn: "978-1593272821"});
+
+// today, revenue report:
+MATCH (g:Good) RETURN g;
+// that book is not in the results. No error, no warning.
+```
+Multi-labels are convention: nothing makes a `:Book` a `:Good` (graph types' implied labels fix this — again Enterprise 2026.02+), so "all goods" is only as complete as everyone's memory.
+
+**4c. Querying a user whose phone may be null:**
 ```cypher
 MATCH (u:User) RETURN u.phone              // no phone → null; typo'd u.phoen → ALSO null
 MATCH (u:User) WHERE u.phone = "..."       // null: row silently dropped
 MATCH (u:User) WHERE NOT u.phone = "..."   // null: ALSO silently dropped
 ```
-**No.** "Optional" is declared nowhere — every property is optional everywhere; absence and typo are indistinguishable; null propagates through three-valued logic. Bugs no tool warns about.
-
-**4b. Cardinality — exactly 1 buyer, at least 1 good?**
-```cypher
-// a transaction with NO goods — commits
-MATCH (u:User {email: "ganesh@typedb.com"})
-CREATE (u)<-[:BUYER]-(:Transaction {amount: 42.0, paymentMethod: "card"});
-
-// a transaction with TWO buyers — commits
-MATCH (u:User {email: "ganesh@typedb.com"})
-CREATE (v:User {email: "mallory@example.com"})
-CREATE (u)<-[:BUYER]-(t:Transaction {amount: 7.0})
-CREATE (v)<-[:BUYER]-(t);
-```
-**No.** No cardinality constraints on relationships in any edition. The rule lives in app code, a nightly audit query, or nowhere.
-
-**4c. A good is either a book (isbn) or an electronic (warranty-expired-date)?**
-```cypher
-CREATE (:Good:Book {price: 5.0, warrantyExpiredDate: date("2028-01-01")});  // book with warranty — commits
-CREATE (:Book {price: 8.0, isbn: "978-1593272821"});  // forgot :Good — invisible to MATCH (g:Good)
-CREATE (:Good:User {email: "ghost@example.com", price: 1.0});  // both Good and User — commits
-```
-**No.** Labels carry no attributes and no rules: nothing ties `isbn` to books, nothing makes book-or-electronic exclusive, nothing makes either one a good.
+"Optional" is declared nowhere — absence and typo are indistinguishable; null propagates through three-valued logic. Bugs no tool warns about.
 
 → This is the cliffhanger the TypeDB arcs resolve.
 
@@ -103,3 +117,4 @@ CREATE (:Good:User {email: "ghost@example.com", price: 1.0});  // both Good and 
 - Deck is styled to typedb.com's brand: official logo (inline SVG, title slide + top-left corner), purple background `#1a182a`, green/red/blue accents (`#02dac9`/`#e96464`/`#7ba0ff`), Monaco for code. Their "Darkmode" webfont is licensed, so the deck falls back to Helvetica.
 - All arc 3/4 Cypher is runnable against the local demo in `neo4j/` (auth disabled, `cypher-shell`); `neo4j/queries.md` has the full script — note it still uses the old domain (user has `name`, electronics with `warrantyMonths`) and should be refreshed before a live run.
 - No TypeQL in the deck yet; when it returns, validate every snippet with `typeql-check`.
+- Cypher semantics reference: https://neo4j.com/docs/cypher-manual/current/ (constraints, null behavior, list properties).

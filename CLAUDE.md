@@ -26,21 +26,32 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
 
 # Presentation
 
-- graph: a node and edges
-- neo4j's graph: what does it add on top of plain graph. show using the ecommerce domain
-- ecommerce example in neo4j
-  - modeling the schema (if such a thing exist in neo4j)
+- neo4j and property graph: illustrate using diagram depicting the ecommerce domain
+- ecommerce example in neo4j (happy path)
+  - modeling the schema using graph types
   - inserting new user, transaction
   - inserting good
-- can we model the following in neo4j? if we can't show a slide doing so:
-  - NULL-safe query to retrieve user's phone
-  - cardinality
-  - the fact that good can either be book or electronic, each of which has different
+- ecommerce example in neo4j (unhappy path)
+  - inserting two email addresses
+  - querying for all goods
+  - querying for a user, of which its phone may be 'null'
+- ecommerce example in typedb
+  - modeling the schema (add cardinality and inheritance)
+  - inserting new user, transaction
+  - inserting good
+- ecommerce example in typedb
+  - modeling the schema
+  - inserting new user, transaction
+  - inserting good
+- ecommerce example in typedb (demonstrate type safety)
+  - inserting two email addresses - rejected
+  - querying for a user, of which its phone may be 'null' using 'try' / optionals
+  - querying for just electronic, just book, and all goods
 
 # Examples: Ecommerce
 Whenever show off a feature and making a comparison vs neo4j, use these e-commerce examples. Here are the "entities" and how they're related to others:
 - user (has email, address, and optionally phone)
-- transaction (associated with a user and goods. has amount, payment-method, date)
+- transaction (associated with a user and goods. has amount, date)
 - good (has price), which can either be a book (has an isbn) or electronic (has warranty-expired-date)
 
 # Sources
@@ -49,4 +60,8 @@ Here are sources you can reference
   - https://typedb.com/blog/how-strict-should-your-schema-be
   - https://typedb.com/blog/benchmarking-llm-query-generation-across-sql-cypher-and-typeql
 
-And make sure to validate typeql query syntax with `typeql-check` CLI tool
+Here are neo4j doc you can reference
+  - https://neo4j.com/docs/cypher-manual/current/
+  - focus on schema: https://neo4j.com/docs/cypher-manual/current/schema/
+
+  And make sure to validate typeql query syntax with `typeql-check` CLI tool

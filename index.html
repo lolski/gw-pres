@@ -136,110 +136,61 @@ The picture now has names — you can ask "all users",
 "everything this transaction contains".
 </textarea></section>
 
-<!-- ============ ARC 3 — ECOMMERCE IN NEO4J ============ -->
-<section data-arc="Arc 3 · Ecommerce in Neo4j">
-  <h2>Modeling the schema…</h2>
-  <h3>…if such a thing exists</h3>
-  <pre><code class="language-cypher" data-trim>
-CREATE CONSTRAINT user_email FOR (u:User) REQUIRE u.email IS UNIQUE;
-
-// that's it — that's the whole schema.
-// (property existence constraints: Enterprise-only)
-  </code></pre>
-  <p class="small">Neo4j Community can declare <strong>uniqueness</strong>. Labels, properties,
-  relationship endpoints — none of it is declared anywhere; the "model" lives in your head.</p>
+<!-- ============ ARC 3 — ECOMMERCE IN NEO4J: HAPPY PATH ============ -->
+<section data-arc="Arc 3 · Ecommerce in Neo4j — happy path">
+  <h2>Modeling the schema: graph types</h2>
+  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/01-schema-graph-type.cypher"></code></pre>
+  <p class="small">Neo4j's best effort: typed properties, required fields, keys, implied labels
+  (<code>:Book => :Good</code>), relationship endpoints. On <strong>Community</strong> edition the
+  vocabulary is one line: <code>CREATE CONSTRAINT … REQUIRE u.email IS UNIQUE</code>.</p>
 </section>
 
 <section>
   <h2>Inserting a user and a transaction</h2>
-  <pre><code class="language-cypher" data-trim>
-CREATE (:User {email: "ganesh@typedb.com",
-               address: "1 Example St, London",
-               phone: "+44 20 7946 0000"});
-
-MATCH (u:User {email: "ganesh@typedb.com"}),
-      (b:Book {isbn: "978-0135957059"})
-CREATE (u)<-[:BUYER]-(:Transaction {amount: 12.99,
-        paymentMethod: "card", date: date("2026-10-23")})
-       -[:CONTAINS]->(b);
-  </code></pre>
+  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/04-insert-user-transaction.cypher"></code></pre>
   <p class="small">Clean and readable — Cypher's pattern syntax is genuinely nice.</p>
 </section>
 
 <section>
   <h2>Inserting goods</h2>
-  <pre><code class="language-cypher" data-trim>
-CREATE (:Good:Book {price: 12.99, isbn: "978-0135957059"});
-
-CREATE (:Good:Electronic {price: 299.0,
-        warrantyExpiredDate: date("2028-10-23")});
-  </code></pre>
+  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/03-insert-goods.cypher"></code></pre>
   <p class="small">Multi-labels (<code>:Good:Book</code>) stand in for "a book <em>is a</em> good" —
   by convention, not by rule. Hold that thought.</p>
 </section>
 
-<!-- ============ ARC 4 — CAN NEO4J MODEL THIS? ============ -->
-<section data-markdown data-arc="Arc 4 · Can Neo4j model this?"><textarea data-template>
-# Can we model this in Neo4j?
+<!-- ============ ARC 4 — ECOMMERCE IN NEO4J: UNHAPPY PATH ============ -->
+<section data-markdown data-arc="Arc 4 · Ecommerce in Neo4j — unhappy path"><textarea data-template>
+# The unhappy path
 
-1. A **null-safe** query for a user's optional `phone`
-2. **Cardinality**: 1 buyer, ≥1 good per transaction
-3. A good is **either** a book (isbn) **or** an electronic (warranty)
+Same shop, three everyday operations —
+run on Community edition, where graph types don't exist:
+
+1. Inserting a user with **two email addresses**
+2. Querying for **all goods**
+3. Querying a user whose **phone may be null**
 </textarea></section>
 
 <section>
-  <h2>1 · Null-safe phone lookup?</h2>
-  <pre><code class="language-cypher" data-trim>
-MATCH (u:User) RETURN u.phone
-// user without phone  → null
-// typo: u.phoen       → ALSO null, no error
-
-MATCH (u:User) WHERE u.phone = "+44 20 7946 0000" RETURN u
-// null: row silently dropped
-MATCH (u:User) WHERE NOT u.phone = "+44 20 7946 0000" RETURN u
-// null: ALSO silently dropped
-  </code></pre>
-  <p class="small"><strong>No.</strong> "Optional" is declared nowhere — every property is optional
-  everywhere, absence and typo are indistinguishable, and null propagates through
-  three-valued logic.</p>
+  <h2>1 · Inserting two email addresses</h2>
+  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/05-insert-two-emails.cypher"></code></pre>
+  <p class="small">The uniqueness constraint doesn't even see it. A graph type's
+  <code>email :: STRING</code> would catch this — but that's Enterprise 2026.02+;
+  everywhere else, the "schema" can't say <em>one email per user</em>.</p>
 </section>
 
 <section>
-  <h2>2 · Cardinality?</h2>
-  <pre><code class="language-cypher" data-trim>
-// a transaction with NO goods — commits
-MATCH (u:User {email: "ganesh@typedb.com"})
-CREATE (u)<-[:BUYER]-(:Transaction {amount: 42.0,
-                                    paymentMethod: "card"});
-
-// a transaction with TWO buyers — commits
-MATCH (u:User {email: "ganesh@typedb.com"})
-CREATE (v:User {email: "mallory@example.com"})
-CREATE (u)<-[:BUYER]-(t:Transaction {amount: 7.0})
-CREATE (v)<-[:BUYER]-(t);
-  </code></pre>
-  <p class="small"><strong>No.</strong> Neo4j has no cardinality constraints on relationships —
-  in any edition. "Exactly 1 buyer, at least 1 good" lives in app code, or in a
-  nightly audit query, or nowhere.</p>
+  <h2>2 · Querying for all goods</h2>
+  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/07-query-all-goods.cypher"></code></pre>
+  <p class="small">Multi-labels are convention: nothing makes a <code>:Book</code> a
+  <code>:Good</code> (graph types' implied labels fix this — again, Enterprise 2026.02+),
+  so "all goods" is only as complete as everyone's memory.</p>
 </section>
 
 <section>
-  <h2>3 · A good is a book OR an electronic?</h2>
-  <pre><code class="language-cypher" data-trim>
-// a book with a warranty and no isbn — commits
-CREATE (:Good:Book {price: 5.0,
-        warrantyExpiredDate: date("2028-01-01")});
-
-// a bare :Book that forgot :Good — commits, and silently
-// disappears from every  MATCH (g:Good)  query
-CREATE (:Book {price: 8.0, isbn: "978-1593272821"});
-
-// a node that is both a Good and a User — commits
-CREATE (:Good:User {email: "ghost@example.com", price: 1.0});
-  </code></pre>
-  <p class="small"><strong>No.</strong> Labels carry no attributes and no rules: nothing ties
-  <code>isbn</code> to books, nothing makes book-or-electronic exclusive, nothing makes
-  either one a good.</p>
+  <h2>3 · Querying a user whose phone may be null</h2>
+  <pre><code class="language-cypher" data-cypher-src="neo4j/queries/08-query-phone-null.cypher"></code></pre>
+  <p class="small">"Optional" is declared nowhere — absence and typo are indistinguishable,
+  and null propagates through three-valued logic. Bugs no tool warns you about.</p>
 </section>
 
 </div>
@@ -319,6 +270,21 @@ CREATE (:Good:User {email: "ghost@example.com", price: 1.0});
   }
   Reveal.on('ready', updateArcBadge);
   Reveal.on('slidechanged', updateArcBadge);
+
+  // Cypher snippets live in neo4j/queries/*.cypher so the exact same files can
+  // be tested against a real Neo4j (neo4j/test.sh); fetch them into the deck.
+  const hlPlugin = Reveal.getPlugin('highlight');
+  document.querySelectorAll('code[data-cypher-src]').forEach(async el => {
+    const path = el.dataset.cypherSrc;
+    try {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error(res.status);
+      el.textContent = (await res.text()).trim();
+    } catch {
+      el.textContent = `// failed to load ${path}\n// serve the deck over http, e.g.  python3 -m http.server`;
+    }
+    hlPlugin.hljs.highlightElement(el);
+  });
 </script>
 </body>
 </html>
