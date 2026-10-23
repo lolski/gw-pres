@@ -1,6 +1,6 @@
 # same query, same type safety — types INFERRED:
-# buyer must be a user, item must be a good
+# $u and $g are never declared; the compiler works out
+# buyer must be a user, and $g (plays a role, owns price) a good
 match
-  $t isa transaction (buyer: $u, item: $g);
-  $t has amount $a;
+  $t isa transaction ($u, $g), has amount $a;
   $g has price $p;
