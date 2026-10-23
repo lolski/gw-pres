@@ -8,461 +8,244 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css">
   <style>
-    .reveal h1, .reveal h2 { text-transform: none; }
-    .reveal table { font-size: 0.65em; }
+    /* TypeDB brand (typedb.com): colors + font stacks; Darkmode is their
+       licensed webfont, so we fall back to Helvetica rather than embed it. */
+    :root {
+      --td-bg: #1a182a; --td-bg-deep: #151322;
+      --td-white: #f3f3f3; --td-grey: #d7d4e5;
+      --td-green: #02dac9; --td-red: #e96464;
+      --td-blue: #7ba0ff; --td-yellow: #ffe49e;
+      --td-muted: #958fa8;
+      --r-background-color: var(--td-bg);
+      --r-main-color: var(--td-grey);
+      --r-heading-color: var(--td-white);
+      --r-main-font: Darkmode, Helvetica, Calibri, Arial, sans-serif;
+      --r-heading-font: Darkmode, Helvetica, Calibri, Arial, sans-serif;
+      --r-code-font: Monaco, monospace;
+      --r-link-color: var(--td-green);
+      --r-link-color-hover: var(--td-blue);
+    }
+    .reveal h1, .reveal h2 { text-transform: none; font-weight: 400; }
+    .reveal strong { color: var(--td-white); }
     .reveal pre { width: 100%; }
-    .reveal pre code { max-height: 480px; font-size: 0.7em; line-height: 1.35; }
-    .reveal .small { font-size: 0.6em; }
-    .reveal blockquote { font-style: italic; width: 90%; }
-    .reveal .cols { display: flex; gap: 1em; align-items: flex-start; }
-    .reveal .cols > div { flex: 1; min-width: 0; }
-    .reveal .cols h3 { font-size: 0.8em; }
-    .reveal .cols pre { margin: 0 0 0.4em; }
-    .reveal .cols pre code { font-size: 0.52em; line-height: 1.35; }
-    .reveal .cols .small { display: block; margin-top: 0.3em; }
-    .bad  { color: #ff6b6b; }
-    .good { color: #7bed9f; }
-    .quadrant { width: 88%; max-width: 820px; margin: 0 auto; display: block; }
-    .quadrant text { fill: #ccc; font-family: sans-serif; font-size: 22px; }
-    .quadrant .axis { stroke: #666; stroke-width: 2; }
-    .quadrant .axislabel { fill: #888; font-size: 19px; }
-    .quadrant circle { fill: #42affa; }
-    .quadrant .hero circle { fill: #7bed9f; }
-    .quadrant .hero text { fill: #7bed9f; font-weight: bold; }
+    .reveal pre code { max-height: 480px; font-size: 0.7em; line-height: 1.35; background: var(--td-bg-deep); }
+    .reveal .small { font-size: 0.6em; color: var(--td-muted); }
+    .good { color: var(--td-green); }
+    .bad  { color: var(--td-red); }
+    .graphfig { width: 85%; max-width: 780px; margin: 0 auto; display: block; }
+    .graphfig text { fill: var(--td-grey); font-family: var(--r-main-font); font-size: 20px; }
+    .graphfig .edge { stroke: #63607c; stroke-width: 2.5; }
+    .graphfig .node { fill: none; stroke: var(--td-blue); stroke-width: 3; }
+    .graphfig .rel { fill: var(--td-green); font-size: 17px; }
+    .graphfig .prop { fill: var(--td-muted); font-size: 15px; }
     #arc-badge {
-      position: fixed; top: 14px; right: 18px; z-index: 10;
-      font-family: sans-serif; font-size: 15px; color: #888;
+      position: fixed; top: 18px; right: 18px; z-index: 10;
+      font-family: var(--r-main-font); font-size: 15px; color: var(--td-muted);
       letter-spacing: 0.04em; pointer-events: none;
     }
+    #logo-badge { position: fixed; top: 14px; left: 18px; z-index: 10; color: var(--td-white); pointer-events: none; }
+    #logo-badge svg { width: 96px; height: 33px; display: block; }
+    .title-logo { color: var(--td-white); width: 280px; height: 95px; margin: 0 auto 0.6em; display: block; }
   </style>
 </head>
 <body>
+<!-- Official TypeDB logo (inline SVG from typedb.com), reused via <use> -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="typedb-logo" viewBox="0 0 2025 687" fill="none">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M800 486.998V277.003H879.006V237H677V277.003H756V486.998H800Z" fill="currentColor"></path>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M990.5 559L1073.7 303.391L1076 297.004H1033L985.01 450.001L980 450L932 297H889L891.117 303.391L950.847 487H972.702L947.122 559H990.5Z" fill="currentColor"></path>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M1150 559.012V486.999H1212.52C1250.41 486.999 1269 467.862 1269 429.731V354.2C1269 316.069 1250.41 297.004 1212.52 297.004H1108.01V559.012H1150ZM1210.35 450.003H1150V334H1210.35C1221.45 334 1227 339.551 1227 350.58V433.351C1227 444.452 1221.45 450.003 1210.35 450.003Z" fill="currentColor"></path>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M1460 487L1471 450.001H1376C1364.9 450.001 1359 444.451 1359 433.349L1359.01 408.003H1478V354.063C1478 315.933 1459.06 296.867 1421.17 296.867H1374.2C1336.07 296.867 1317.01 315.933 1317.01 354.063L1317 429.729C1317 467.86 1336.07 487 1374.2 487H1460ZM1435.65 375.003H1359.01V350.443C1359.01 339.342 1364.91 334 1376.01 334C1387.11 334 1419 334 1419 334C1430.1 334 1435.65 339.342 1435.65 350.443V375.003Z" fill="currentColor"></path>
+    <path d="M1625.43 487.002C1690.59 487.002 1723.02 454.302 1723.02 388.9V334.92C1723.02 269.519 1690.59 237.007 1625.43 237.007H1529L1529 487.002H1625.43ZM1627.97 446.82H1573.01L1573.01 277H1627.97C1661.99 277 1679.01 294.014 1679.01 328.042L1679.01 395.778C1679.01 429.806 1661.99 446.82 1627.97 446.82Z" fill="currentColor"></path>
+    <path d="M1903.34 487C1942.67 487 1961.99 467.331 1961.99 427.994V396.638C1961.99 383.847 1958.01 374.194 1950.05 367.678L1934.84 355.008L1947.51 339.804C1952.34 334.012 1954.75 327.013 1954.75 318.808V296.002C1954.75 256.665 1935.43 236.996 1896.1 236.996L1779 236.996V487H1903.34ZM1895.01 337.27H1823V277.178H1895.01C1905.63 277.178 1910.94 282.367 1910.94 292.744V321.342C1910.94 331.961 1905.63 337.27 1895.01 337.27ZM1902.25 446.818H1823V377.452H1902.25C1912.87 377.452 1918.18 382.641 1918.18 393.018V431.252C1918.18 441.629 1912.87 446.818 1902.25 446.818Z" fill="currentColor"></path>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M318 131.276C449.444 131.276 556 237.77 556 369.138C556 500.506 449.444 607 318 607C186.556 607 80 500.506 80 369.138C80 237.77 186.556 131.276 318 131.276ZM410.82 253.852L222.166 253.852L221.868 253.853C157.86 254.182 106.237 306.308 106.566 370.28C106.897 434.692 159.212 486.746 223.662 486.795L410.907 486.936C475.285 486.936 527.473 434.778 527.473 370.438C527.473 306.049 475.245 253.852 410.82 253.852Z" fill="currentColor"></path>
+    <path d="M244.073 420.735C272.438 420.735 295.433 398.522 295.433 371.122C295.433 343.721 272.438 321.509 244.073 321.509C215.708 321.509 192.714 343.721 192.714 371.122C192.714 398.522 215.708 420.735 244.073 420.735Z" fill="currentColor"></path>
+    <path d="M400.292 420.735C428.657 420.735 451.652 398.522 451.652 371.122C451.652 343.721 428.657 321.509 400.292 321.509C371.927 321.509 348.932 343.721 348.932 371.122C348.932 398.522 371.927 420.735 400.292 420.735Z" fill="currentColor"></path>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M134.797 80C160.075 80 180.566 100.48 180.566 125.743C180.566 144.461 169.317 160.553 153.207 167.634L153.207 271.148H116.591L116.591 167.723C100.372 160.688 89.028 144.539 89.028 125.743C89.028 100.48 109.52 80 134.797 80Z" fill="currentColor"></path>
+  </symbol>
+</svg>
 <div class="reveal">
 <div class="slides">
 
-<!-- ============ ARC 1 — PROGRAMMING IS MOVING TO TYPE-SAFE LANGUAGES ============ -->
-<!-- ===== 1. CONTRACTS → TYPE SAFETY (0:00–7:00) ===== -->
-<section data-markdown><textarea data-template>
-# Bringing Type Systems into the Graph World
-
-Ganeshwara Hananda · TypeDB
-</textarea></section>
-
-<section data-markdown data-arc="Arc 1 · Programming is moving to type-safe languages"><textarea data-template>
-## The problem: contracts
-
-Every boundary is a contract —
-a function signature, an API payload, a row in a database.
-
-The question is never *whether* you have a contract.
-It's **where it lives and who enforces it**.
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-> "Schemaless structures still have an **implicit schema**."
-> — Martin Fowler
-
-Untyped systems keep the contract in docs and people's heads.
-Enforcement is hope, plus runtime errors in production.
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## The solution: type safety
-
-Make the contract **machine-checked**.
-The industry keeps choosing this, voluntarily:
-
-- **Frontend**: JavaScript → TypeScript
-- **Backend**: plain Python → Python with type hints
-- **Modern languages, modern type systems**: Haskell, Rust
-
-Untyped is fine — until the system gets big.
-</textarea></section>
-
 <section>
-  <h2>The language landscape</h2>
-  <svg class="quadrant" viewBox="0 0 800 500" role="img" aria-label="Languages plotted by type safety and verbosity">
-    <line class="axis" x1="60" y1="250" x2="760" y2="250"/>
-    <line class="axis" x1="410" y1="40" x2="410" y2="460"/>
-    <text class="axislabel" x="65" y="240">not type-safe</text>
-    <text class="axislabel" x="660" y="240">type-safe</text>
-    <text class="axislabel" x="418" y="60">not verbose</text>
-    <text class="axislabel" x="418" y="452">verbose</text>
-    <g><circle cx="120" cy="160" r="9"/><text x="138" y="166">JavaScript</text></g>
-    <g><circle cx="175" cy="115" r="9"/><text x="193" y="121">Python</text></g>
-    <g><circle cx="470" cy="190" r="9"/><text x="488" y="196">Python + type hints</text></g>
-    <g><circle cx="540" cy="130" r="9"/><text x="558" y="136">TypeScript</text></g>
-    <g><circle cx="590" cy="420" r="9"/><text x="608" y="426">Java (2005)</text></g>
-    <g><circle cx="630" cy="120" r="9"/><text x="648" y="126">Haskell</text></g>
-    <g class="hero"><circle cx="680" cy="200" r="9"/><text x="698" y="206">Rust</text></g>
+  <svg class="title-logo"><use href="#typedb-logo"/></svg>
+  <h1 style="font-size:1.6em">Bringing Type Systems<br>into the Graph World</h1>
+  <p class="small">Ganeshwara Hananda · TypeDB</p>
+</section>
+
+<!-- ============ ARC 1 — A GRAPH: NODES AND EDGES ============ -->
+<section data-arc="Arc 1 · A graph: nodes and edges">
+  <h2>A graph: nodes and edges</h2>
+  <svg class="graphfig" viewBox="0 0 760 360" role="img" aria-label="A plain directed graph: four anonymous nodes connected by directed edges">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0L10,5L0,10z" fill="#63607c"/>
+      </marker>
+    </defs>
+    <line class="edge" x1="357.7" y1="120.8" x2="217.9" y2="167.4" marker-end="url(#arr)"/>
+    <line class="edge" x1="423.8" y1="106.8" x2="560.2" y2="93.8" marker-end="url(#arr)"/>
+    <line class="edge" x1="416.7" y1="131.1" x2="548.6" y2="235.2" marker-end="url(#arr)"/>
+    <circle class="node" cx="180" cy="180" r="34"/>
+    <circle class="node" cx="390" cy="110" r="34"/>
+    <circle class="node" cx="600" cy="90" r="34"/>
+    <circle class="node" cx="580" cy="260" r="34"/>
+  </svg>
+  <p class="small">The whole data model: nodes and <em>directed</em> edges. Relationships are
+  first-class — no join tables, no foreign keys. But the graph says <em>nothing about</em> the
+  nodes and edges: which one is the user? what does this arrow mean?</p>
+</section>
+
+<!-- ============ ARC 2 — NEO4J'S PROPERTY GRAPH ============ -->
+<section data-arc="Arc 2 · Neo4j’s property graph">
+  <h2>Neo4j: the labeled property graph</h2>
+  <svg class="graphfig" viewBox="0 0 760 360" role="img" aria-label="Property graph notation: labeled nodes with property maps and typed directed relationships">
+    <defs>
+      <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0L10,5L0,10z" fill="#63607c"/>
+      </marker>
+    </defs>
+    <line class="edge" x1="357.7" y1="120.8" x2="217.9" y2="167.4" marker-end="url(#arr2)"/>
+    <line class="edge" x1="423.8" y1="106.8" x2="560.2" y2="93.8" marker-end="url(#arr2)"/>
+    <line class="edge" x1="416.7" y1="131.1" x2="548.6" y2="235.2" marker-end="url(#arr2)"/>
+    <circle class="node" cx="180" cy="180" r="34"/>
+    <circle class="node" cx="390" cy="110" r="34"/>
+    <circle class="node" cx="600" cy="90" r="34"/>
+    <circle class="node" cx="580" cy="260" r="34"/>
+    <text x="180" y="186" text-anchor="middle">:User</text>
+    <text class="prop" x="180" y="240" text-anchor="middle">{email, address, phone?}</text>
+    <text x="390" y="116" text-anchor="middle" font-size="15">:Transaction</text>
+    <text class="prop" x="390" y="62" text-anchor="middle">{amount, paymentMethod, date}</text>
+    <text x="600" y="96" text-anchor="middle" font-size="14">:Good:Book</text>
+    <text class="prop" x="600" y="42" text-anchor="middle">{price, isbn}</text>
+    <text x="580" y="266" text-anchor="middle" font-size="11">:Good:Electronic</text>
+    <text class="prop" x="580" y="320" text-anchor="middle">{price, warrantyExpiredDate}</text>
+    <text class="rel" x="252" y="130">:BUYER</text>
+    <text class="rel" x="468" y="88">:CONTAINS</text>
+    <text class="rel" x="448" y="200">:CONTAINS</text>
   </svg>
 </section>
 
 <section data-markdown><textarea data-template>
-## The challenge: verbosity
+## What the property graph adds
 
-Types used to cost **ceremony** —
-2005 Java made "type-safe" feel like "triple the code."
+1. **Labels** on nodes: `:User`, `:Transaction`, multi-labels like `:Good:Book`
+2. **Key-value properties** on nodes and relationships
+3. **Typed, directed relationships**: `:BUYER`, `:CONTAINS`
 
-Modern type systems answered with **inference**:
-Haskell, Rust, TypeScript — safety without the boilerplate.
-
-The industry is migrating **up and to the right**.
+The picture now has names — you can ask "all users",
+"everything this transaction contains".
 </textarea></section>
 
-<!-- ============ ARC 2 — NOW IT'S TIME FOR THE DATABASE ============ -->
-<!-- ===== 2. THE PIVOT (7:00–8:00) ===== -->
-<section data-markdown data-arc="Arc 2 · Now it’s time for the database"><textarea data-template>
-## Programming languages have evolved.
+<!-- ============ ARC 3 — ECOMMERCE IN NEO4J ============ -->
+<section data-arc="Arc 3 · Ecommerce in Neo4j">
+  <h2>Modeling the schema…</h2>
+  <h3>…if such a thing exists</h3>
+  <pre><code class="language-cypher" data-trim>
+CREATE CONSTRAINT user_email FOR (u:User) REQUIRE u.email IS UNIQUE;
 
-Null-safety · generics · gradual typing — every decade, stricter.
-
-Your code is typed. Your API contracts are typed.
-Your database still takes whatever you throw at it.
-
-# Now it's time for the database.
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## Running example: ecommerce
-
-- **user** — email, name, address
-- **transaction** — a user buys goods; amount, payment-method, date
-- **good** — price
-
-Three type-system concepts, each in TypeQL vs Cypher —
-then what you buy with them.
-</textarea></section>
-
-<!-- ===== 3. NULL-SAFETY (8:00–14:00) ===== -->
-<section data-markdown data-arc="Arc 3 · Null-safety with optionals"><textarea data-template>
-# Null-safety
-
-The rule: not every user has an address —
-but absence must be **explicit**, never a silent `null`.
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## The billion-dollar mistake
-
-Tony Hoare, on inventing null.
-
-Languages fixed it with **types**:
-Rust `Option<T>` · Kotlin `String?` · Haskell `Maybe`
-
-TypeQL follows the same lineage:
-**there is no null in TypeDB.**
-</textarea></section>
-
-<section>
-  <h2>Null-safety: TypeQL vs Cypher</h2>
-  <div class="cols">
-    <div>
-      <h3 class="good">TypeQL</h3>
-      <pre><code class="language-typeql" data-trim>
-define
-  entity user,
-    owns name @card(1..1),     # required
-    owns address @card(0..3); # optional
-      </code></pre>
-      <pre><code class="language-typeql" data-trim>
-match
-  $u isa user, has name $n;
-  try { $u has address $a; };
-  # $a bound if present,
-  # absent otherwise
-      </code></pre>
-      <span class="small">Optionality declared in the schema, handled explicitly with <code>try</code>.</span>
-    </div>
-    <div>
-      <h3 class="bad">Cypher</h3>
-      <pre><code class="language-cypher" data-trim>
-// no schema: every property
-// is optional, everywhere
-
-MATCH (u:User) RETURN u.address
-// missing → silently null
-
-MATCH (u:User)
-WHERE u.address = "..."
-// null: row dropped
-MATCH (u:User)
-WHERE NOT u.address = "..."
-// null: ALSO dropped
-      </code></pre>
-      <span class="small">Null propagates through three-valued logic — bugs no tool warns you about.</span>
-    </div>
-  </div>
+// that's it — that's the whole schema.
+// (property existence constraints: Enterprise-only)
+  </code></pre>
+  <p class="small">Neo4j Community can declare <strong>uniqueness</strong>. Labels, properties,
+  relationship endpoints — none of it is declared anywhere; the "model" lives in your head.</p>
 </section>
 
 <section>
-  <h2>The benefit</h2>
-  <div class="cols">
-    <div>
-      <h3 class="bad">Cypher</h3>
-      <p>Absence is a sentinel value that leaks through results and blows up in app code.</p>
-    </div>
-    <div>
-      <h3 class="good">TypeQL</h3>
-      <p>Absence is a type-level concept, checked by the query compiler.</p>
-    </div>
-  </div>
-</section>
+  <h2>Inserting a user and a transaction</h2>
+  <pre><code class="language-cypher" data-trim>
+CREATE (:User {email: "ganesh@typedb.com",
+               address: "1 Example St, London",
+               phone: "+44 20 7946 0000"});
 
-<!-- ===== 4. CARDINALITY (14:00–21:00) ===== -->
-<section data-markdown data-arc="Arc 4 · Cardinality"><textarea data-template>
-# Cardinality
-
-The rule: every transaction has **exactly one buyer**
-and **at least one good**; a user has **at most 3 addresses**.
-</textarea></section>
-
-<section>
-  <h2>Cardinality: TypeQL vs Cypher</h2>
-  <div class="cols">
-    <div>
-      <h3 class="good">TypeQL</h3>
-      <pre><code class="language-typeql" data-trim>
-define
-  entity user,
-    owns email @key,
-    owns name @card(1..1),
-    owns address @card(0..3),
-    plays transaction:buyer;
-
-  entity good,
-    owns price @card(1..1),
-    plays transaction:item;
-
-  relation transaction,
-    relates buyer @card(1..1),
-    relates item @card(1..),
-    owns amount, owns payment-method, owns date;
-      </code></pre>
-    </div>
-    <div>
-      <h3 class="bad">Cypher</h3>
-      <pre><code class="language-cypher" data-trim>
-CREATE CONSTRAINT user_email FOR (u:User)
-  REQUIRE u.email IS UNIQUE;
-CREATE CONSTRAINT user_name  FOR (u:User)
-  REQUIRE u.name IS NOT NULL;
-
-// addresses "at most 3"?
-//          — not expressible
-// transaction has exactly 1 buyer?
-//          — not expressible
-// transaction has ≥1 good?
-//          — not expressible
-      </code></pre>
-      <span class="small">Property uniqueness/existence only. <strong>No cardinality constraints on relationships at all.</strong></span>
-    </div>
-  </div>
+MATCH (u:User {email: "ganesh@typedb.com"}),
+      (b:Book {isbn: "978-0135957059"})
+CREATE (u)<-[:BUYER]-(:Transaction {amount: 12.99,
+        paymentMethod: "card", date: date("2026-10-23")})
+       -[:CONTAINS]->(b);
+  </code></pre>
+  <p class="small">Clean and readable — Cypher's pattern syntax is genuinely nice.</p>
 </section>
 
 <section>
-  <h2>Insert a transaction with no goods</h2>
-  <div class="cols">
-    <div>
-      <h3 class="good">TypeQL</h3>
-      <pre><code class="language-typeql" data-trim>
-match
-  $u isa user,
-    has email "ganesh@typedb.com";
-insert
-  $t isa transaction (buyer: $u),
-    has amount 42.0,
-    has payment-method "card";
-      </code></pre>
-      <span class="small"><code>commit</code> <strong>fails</strong>: cardinality violation — <code>transaction:item</code> requires at least 1 player.</span>
-    </div>
-    <div>
-      <h3 class="bad">Cypher</h3>
-      <pre><code class="language-cypher" data-trim>
-MATCH (u:User
-  {email: "ganesh@typedb.com"})
-CREATE (u)<-[:BUYER]-
-  (t:Transaction {amount: 42.0,
-    paymentMethod: "card"})
-// no goods attached
-      </code></pre>
-      <span class="small"><strong>Commits.</strong> Bug discovered whenever someone notices the revenue report is off.</span>
-    </div>
-  </div>
+  <h2>Inserting goods</h2>
+  <pre><code class="language-cypher" data-trim>
+CREATE (:Good:Book {price: 12.99, isbn: "978-0135957059"});
+
+CREATE (:Good:Electronic {price: 299.0,
+        warrantyExpiredDate: date("2028-10-23")});
+  </code></pre>
+  <p class="small">Multi-labels (<code>:Good:Book</code>) stand in for "a book <em>is a</em> good" —
+  by convention, not by rule. Hold that thought.</p>
 </section>
 
-<!-- ===== 5. INHERITANCE (21:00–28:00) ===== -->
-<section data-arc="Arc 5 · Inheritance">
-  <h1>Inheritance</h1>
-  <p class="small">The conceptual problem: goods come in kinds, each with its own attributes — and every kind has a price.</p>
-  <svg class="quadrant" viewBox="0 0 800 400" role="img" aria-label="Type hierarchy: book and electronics are kinds of good">
-    <g fill="none" stroke="#ccc" stroke-width="2">
-      <rect x="290" y="30" width="220" height="90" rx="8"/>
-      <rect x="80" y="260" width="220" height="90" rx="8"/>
-      <rect x="500" y="260" width="220" height="90" rx="8"/>
-      <line x1="190" y1="260" x2="380" y2="120"/>
-      <line x1="610" y1="260" x2="420" y2="120"/>
-    </g>
-    <g fill="#ccc" font-family="sans-serif" font-size="24" text-anchor="middle">
-      <text x="400" y="68" font-weight="bold">good</text>
-      <text x="400" y="100" font-size="19">abstract · has price</text>
-      <text x="190" y="298" font-weight="bold">book</text>
-      <text x="190" y="330" font-size="19">+ has isbn</text>
-      <text x="610" y="298" font-weight="bold">electronics</text>
-      <text x="610" y="330" font-size="19">+ has warranty</text>
-      <text x="255" y="185" font-size="18" fill="#888">is a</text>
-      <text x="545" y="185" font-size="18" fill="#888">is a</text>
-    </g>
-  </svg>
-  <p class="small">The question: can your database <em>say</em> this — and enforce it?</p>
+<!-- ============ ARC 4 — CAN NEO4J MODEL THIS? ============ -->
+<section data-markdown data-arc="Arc 4 · Can Neo4j model this?"><textarea data-template>
+# Can we model this in Neo4j?
+
+1. A **null-safe** query for a user's optional `phone`
+2. **Cardinality**: 1 buyer, ≥1 good per transaction
+3. A good is **either** a book (isbn) **or** an electronic (warranty)
+</textarea></section>
+
+<section>
+  <h2>1 · Null-safe phone lookup?</h2>
+  <pre><code class="language-cypher" data-trim>
+MATCH (u:User) RETURN u.phone
+// user without phone  → null
+// typo: u.phoen       → ALSO null, no error
+
+MATCH (u:User) WHERE u.phone = "+44 20 7946 0000" RETURN u
+// null: row silently dropped
+MATCH (u:User) WHERE NOT u.phone = "+44 20 7946 0000" RETURN u
+// null: ALSO silently dropped
+  </code></pre>
+  <p class="small"><strong>No.</strong> "Optional" is declared nowhere — every property is optional
+  everywhere, absence and typo are indistinguishable, and null propagates through
+  three-valued logic.</p>
 </section>
 
 <section>
-  <h2>Inheritance: TypeQL vs Cypher</h2>
-  <div class="cols">
-    <div>
-      <h3 class="good">TypeQL</h3>
-      <pre><code class="language-typeql" data-trim>
-define
-  entity good @abstract,
-    owns price @card(1..1),
-    plays transaction:item;
-  entity book sub good, owns isbn;
-  entity electronics sub good,
-    owns warranty-months;
-      </code></pre>
-      <pre><code class="language-typeql" data-trim>
-match
-  $t isa transaction (buyer: $u, item: $g);
-  $g has price $p;
-  # matches books AND electronics
-      </code></pre>
-    </div>
-    <div>
-      <h3 class="bad">Cypher</h3>
-      <pre><code class="language-cypher" data-trim>
-CREATE (b:Good:Book
-  {price: 12.99, isbn: "978-..."})
-// multi-label = hope
+  <h2>2 · Cardinality?</h2>
+  <pre><code class="language-cypher" data-trim>
+// a transaction with NO goods — commits
+MATCH (u:User {email: "ganesh@typedb.com"})
+CREATE (u)<-[:BUYER]-(:Transaction {amount: 42.0,
+                                    paymentMethod: "card"});
 
-MATCH (t:Transaction)
-  -[:CONTAINS]->(g:Good)
-RETURN g
-// works only if everyone
-// remembered the :Good label
-      </code></pre>
-      <span class="small">No abstract types, nothing stops a bare <code>:Good</code> or a <code>:Good:User</code>, constraints re-declared per label.</span>
-    </div>
-  </div>
+// a transaction with TWO buyers — commits
+MATCH (u:User {email: "ganesh@typedb.com"})
+CREATE (v:User {email: "mallory@example.com"})
+CREATE (u)<-[:BUYER]-(t:Transaction {amount: 7.0})
+CREATE (v)<-[:BUYER]-(t);
+  </code></pre>
+  <p class="small"><strong>No.</strong> Neo4j has no cardinality constraints on relationships —
+  in any edition. "Exactly 1 buyer, at least 1 good" lives in app code, or in a
+  nightly audit query, or nowhere.</p>
 </section>
 
-<section data-markdown><textarea data-template>
-## The benefit
+<section>
+  <h2>3 · A good is a book OR an electronic?</h2>
+  <pre><code class="language-cypher" data-trim>
+// a book with a warranty and no isbn — commits
+CREATE (:Good:Book {price: 5.0,
+        warrantyExpiredDate: date("2028-01-01")});
 
-`book sub good` is **enforced**:
+// a bare :Book that forgot :Good — commits, and silently
+// disappears from every  MATCH (g:Good)  query
+CREATE (:Book {price: 8.0, isbn: "978-1593272821"});
 
-- every book *is* a good — inherits `price @card(1..1)`
-- `good` is abstract — bare goods can't exist
-- the polymorphic query is **guaranteed complete**
-
-Add `entity furniture sub good` next sprint —
-every existing query over `good` already covers it.
-</textarea></section>
-
-<!-- ===== 6. DATABASE LANDSCAPE (28:00–29:00) ===== -->
-<section data-arc="Arc 6 · The database landscape">
-  <h2>The database landscape</h2>
-  <svg class="quadrant" viewBox="0 0 800 500" role="img" aria-label="Databases plotted by type safety and verbosity">
-    <line class="axis" x1="60" y1="250" x2="760" y2="250"/>
-    <line class="axis" x1="410" y1="40" x2="410" y2="460"/>
-    <text class="axislabel" x="65" y="240">not type-safe</text>
-    <text class="axislabel" x="660" y="240">type-safe</text>
-    <text class="axislabel" x="418" y="60">not verbose</text>
-    <text class="axislabel" x="418" y="452">verbose</text>
-    <g><circle cx="120" cy="130" r="9"/><text x="138" y="136">MongoDB</text></g>
-    <g><circle cx="200" cy="180" r="9"/><text x="218" y="186">Neo4j</text></g>
-    <g><circle cx="250" cy="310" r="9"/><text x="268" y="316">Amazon Neptune</text></g>
-    <g><circle cx="300" cy="215" r="9"/><text x="318" y="221">JanusGraph</text></g>
-    <g><circle cx="500" cy="300" r="9"/><text x="518" y="306">TigerGraph</text></g>
-    <g><circle cx="590" cy="350" r="9"/><text x="608" y="356">Stardog</text></g>
-    <g><circle cx="560" cy="420" r="9"/><text x="578" y="426">PostgreSQL</text></g>
-    <g class="hero"><circle cx="670" cy="140" r="9"/><text x="688" y="146">TypeDB</text></g>
-  </svg>
-  <p class="small">Same migration, one layer down: schema that's enforced, without SQL's ceremony.</p>
+// a node that is both a Good and a User — commits
+CREATE (:Good:User {email: "ghost@example.com", price: 1.0});
+  </code></pre>
+  <p class="small"><strong>No.</strong> Labels carry no attributes and no rules: nothing ties
+  <code>isbn</code> to books, nothing makes book-or-electronic exclusive, nothing makes
+  either one a good.</p>
 </section>
-
-<!-- ===== 7. BENEFITS (29:00–33:00) ===== -->
-<section data-markdown data-arc="Arc 7 · Benefits"><textarea data-template>
-# What you buy with all this
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## For developers
-
-- **Easier to review**: a PR's queries and schema changes carry their
-  contract with them — the reviewer reads types, not the whole codebase
-- **Verify correctness by looking at the types**: if it type-checks
-  against the schema, whole classes of bugs are already ruled out
-- Errors at **commit time in dev**, not in production three services downstream
-- Validation lives in the **one** place every write passes through
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## For AI agents: guardrails
-
-The division of labor:
-**the LLM generates the query, the database validates it.**
-
-The schema bounds what agents can express;
-errors tell them when they've left the road.
-
-**The stricter the type system, the more reliable the agent.**
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## The benchmark
-
-Reactome dataset in MySQL, Neo4j, TypeDB
-Claude Sonnet 5 + DeepSeek V4 Pro · 42 questions · 3,024 runs
-
-| | SQL | Cypher | TypeQL |
-|---|---|---|---|
-| Zero-shot | ~60% | ~60% | 25% |
-| + docs & examples | 78–82% | 74–84% | 62–75% |
-| + retries | 83–85% | 82–89% | **86–92%** |
-</textarea></section>
-
-<section data-markdown><textarea data-template>
-## Why does TypeQL win with retries?
-
-A wrong Cypher query **silently returns empty** —
-the agent can't tell "no data" from "bad query."
-
-A wrong TypeQL query **fails loudly** — the agent self-corrects.
-
-**The same strictness that protects developers
-is what makes agents reliable.**
-</textarea></section>
-
-<!-- ===== 8. CLOSE (33:00–35:00) ===== -->
-<section data-markdown data-arc=""><textarea data-template>
-## We typed our code. Now the data.
-
-- **No null** to blow up in app code
-- Cardinality the **database** enforces
-- Inheritance that's **real**, not label convention
-- Agents that go from **25% → 92%** because errors are loud
-
-### typedb.com
-
-<span class="small">blog: *How strict should your schema be?* · *Benchmarking LLM query generation across SQL, Cypher and TypeQL*</span>
-
-**Thank you — questions?**
-</textarea></section>
 
 </div>
 </div>
 <div id="arc-badge"></div>
+<div id="logo-badge"><svg><use href="#typedb-logo"/></svg></div>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
@@ -531,6 +314,8 @@ is what makes agents reliable.**
     for (let i = 0; i <= h; i++)
       if (sections[i].dataset.arc !== undefined) label = sections[i].dataset.arc;
     document.getElementById('arc-badge').textContent = label;
+    // corner logo would double with the title slide's big logo — hide it there
+    document.getElementById('logo-badge').style.display = h === 0 ? 'none' : 'block';
   }
   Reveal.on('ready', updateArcBadge);
   Reveal.on('slidechanged', updateArcBadge);

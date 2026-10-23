@@ -9,57 +9,39 @@ Traditional graph databases excel at representing complex connections, but raw n
 
 TypeDB lets one declare constraints on graphs by borrowing various concepts from type systems as commonly found in programming languages. By bringing concepts such as inheritance and type inference, TypeDB enables you to enforce strong structure whilst maintaining flexibility and expressiveness of graph data structures, thus improving the reliability of services and AI agents that interface with the database.
 
-# Format
-- presentation slides containing code snippets
+# Presentation Format
+- presentation slides
+- figures:
+  - code snippets with syntax highlighting
+  - graph visualised using graph notation (w edge directionality)
+  - property graph visualised using property graph notation
 - 35 mins in length
-- no slide transition animation
 - code blocks:
   - python, typedb, and cypher code blocks must syntax highlighted
 - there are multiple arcs in the presentation. the arc should be displayed to provide context to listeners as to where we are
 
-# What i want covered, and in this particular order
-- arc 1: programming is moving to type safe languages
-  - problem: contract
-  - solution: type safety
-    - examples:
-      - frontend is moving from javascript to typescript.
-      - backend is moving from plain python to python with type hints
-      - modern languages with modern type systems: python (no type hints), python (type hints), javascript, typescript, java, haskell, rust. show with a chart:
-        - axis 1: not typesafe <----> typesafe
-        - axis 2: verbose <----> not verbose
-    - challenges: verbosity
-- arc 2: programming languages have evolved. now it's time for database!
-- arc 3: null-safety in graph database with typedb's optionals
-  - show typeql vs cypher queries. the typeql one should also show the schema 
-  - show what's the benefit that typeql has
-  - typeql and cypher has to be shown side by side for clarity
-- arc 4: cardinality in graph database: show how typedb cardinality makes it more type safe vs cypher
-  - show schema in typeql vs cypher queries
-  - show insert queries in both as well, inserting a new transaction with no goods and how typeql type safety handles it better
-  - show what's the benefit that typeql has
-  - typeql and cypher has to be shown side by side for clarity
-- arc 5: show how typedb inheritance makes it more type safe vs cypher
-  - start with the conceptual problem as a diagram: book has isbn, electronics has waranty. both are a kind of books which has price
-  - show how to express them in typeql vs cypher queries
-  - show what's the benefit that typeql has
-  - typeql and cypher has to be shown side by side for clarity
-- arc 6
-  - modern databases: mongodb, postgresql, typedb, amazon neptune, neo4j, tigergraph, janusgraph, stardog
-    - axis 1: not typesafe <----> typesafe
-    - axis 2: verbose <----> not verbose
-- arc 7: benefits
-  - for developers
-    - easier to review
-    - verify correctness simply by looking at types
-  - for AI agents, guardrails and the likes
-    - LLM generates query, databases validates the query
-    - the stricter the type system the more reliable it is
+# Style guide
+- adopt style from typedb.com website (logo, colour scheme, font etc)
+- no slide transition animation
+
+# Presentation
+
+- graph: a node and edges
+- neo4j's graph: what does it add on top of plain graph. show using the ecommerce domain
+- ecommerce example in neo4j
+  - modeling the schema (if such a thing exist in neo4j)
+  - inserting new user, transaction
+  - inserting good
+- can we model the following in neo4j? if we can't show a slide doing so:
+  - NULL-safe query to retrieve user's phone
+  - cardinality
+  - the fact that good can either be book or electronic, each of which has different
 
 # Examples: Ecommerce
 Whenever show off a feature and making a comparison vs neo4j, use these e-commerce examples. Here are the "entities" and how they're related to others:
-- user (has email, name, address)
+- user (has email, address, and optionally phone)
 - transaction (associated with a user and goods. has amount, payment-method, date)
-- good (has price)
+- good (has price), which can either be a book (has an isbn) or electronic (has warranty-expired-date)
 
 # Sources
 Here are sources you can reference
