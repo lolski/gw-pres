@@ -38,6 +38,8 @@ Outcomes verified by running `test.sh` against the folder distribution (TypeDB 3
 | `09-query-all-goods.tql` | Arc 5 · All goods | read | OK — polymorphic over `good`, guaranteed complete |
 | `10-query-good-warranty.tql` | Arc 5 · Type system knows each kind | read | **FAILS by design** — `[QUA4]` type-inference error: fetch of `warranty-expired-date` on `good`, which doesn't own it |
 | `11-query-electronic-fields.tql` | Arc 5 · Type system knows each kind | read | OK — on `electronic`, inherited `price` and own `warranty-expired-date` both fetchable |
+| `12-query-annotated.tql` | Arc 5 · Inference (left) | read | OK — every variable explicitly typed |
+| `13-query-inferred.tql` | Arc 5 · Inference (right) | read | OK — same query, `isa` annotations omitted; types inferred from roles |
 
 `fragments/price-once.tql` is a schema excerpt for the "price: declared once" side-by-side slide (vs `neo4j/queries/fragments/price-twice.cypher`) — not a runnable query, excluded from `test.sh`.
 

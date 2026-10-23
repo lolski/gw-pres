@@ -73,7 +73,11 @@
 
 # ARC 4 — Ecommerce in TypeDB: the happy path
 
-## Slide: "Modeling the schema" (17:30–21:00)
+## Slide: transition — TypeDB logo (17:30–18:00)
+
+- Beat of silence, let the logo land. One line: "Same shop, same three unhappy operations coming back — but first, let's rebuild the model in a database that borrows from type systems."
+
+## Slide: "Modeling the schema" (18:00–21:00)
 
 - The same domain in TypeQL — enforced in **any edition**. Walk it top to bottom:
   - attributes are typed values, declared once;
@@ -108,27 +112,58 @@
 - Left, TypeQL: there is no null. Optionality lives in the schema (`@card(0..1)`) and is **explicit in the query**: `try { $u has phone $p; }` — `$p` bound if present, absent otherwise. No propagation, no three-valued logic. A typo'd attribute name is a **type error**, not an empty column.
 - Right, Cypher (same slide): the arc-3 queries again — missing phone and typo'd property both silently `null`; the no-phone user falls out of both `WHERE u.phone = …` *and* `WHERE NOT u.phone = …`.
 
-## Slide: "3 · Just electronics, just books, all goods" (28:00–29:30)
+## Slide: "3 · Just electronics, just books, all goods" (28:00–29:00)
 
 - Narrow by subtype (`isa book`, `isa electronic`) or query the supertype (`isa good`) — polymorphic, one query, no UNION.
 - The polymorphic result is **guaranteed complete**: every book and electronic is a good by schema. Add `furniture sub good` next sprint — this query already covers it.
 
-## Slide: "price: declared once" — side by side vs Cypher (29:30–30:30)
+## Slide: "price: declared once" — side by side vs Cypher (29:00–30:00)
 
 - Left, TypeQL: `price` is declared exactly once, on abstract `good`; `book` and `electronic` inherit it.
 - Right, the Neo4j graph type fragment: `price` re-declared on `Book` *and* `Electronic` — no abstract supertype, no shared attribute, and nothing stops the two declarations drifting apart (FLOAT here, INTEGER there).
 
-## Slide: "The type system knows what each kind has" (30:30–32:00)
+## Slide: "The type system knows what each kind has" (30:00–31:00)
 
 - Top query: fetch `warranty-expired-date` off a `good` → **type error before touching data** (verified: `[QUA4]` type-inference error) — `good` doesn't own it, only `electronic` does. Compare: Neo4j returns a column of nulls.
 - Bottom query: narrow to `electronic` → both `price` (inherited) and `warranty-expired-date` are available. The schema tells you *and the query compiler* exactly what each kind has.
 
-## Close (32:00–35:00)
+## Slide: "Type safety without verbosity: inference" (31:00–31:45)
 
-- We type-checked our code (TypeScript, Python hints); TypeDB type-checks the data layer — same graph-shaped data, but the contract lives in the database and is enforced on every write.
-- Strictness is a dial, not a binary — blog: *How strict should your schema be?*
-- For AI agents the same strictness is the feedback loop — a wrong query fails loudly instead of returning empty — blog: *Benchmarking LLM query generation across SQL, Cypher and TypeQL* (typedb.com/blog).
-- Q&A.
+- The classic objection to strict typing: verbosity — 2005-Java flashbacks. Type **inference** is the answer, in TypeQL as in modern languages.
+- Left: the query with every variable explicitly typed. Right: the exact same query with `$u isa user` and `$g isa good` deleted — the schema already knows a `buyer` must be a user and an `item` must be a good, so the compiler infers them.
+- Same answers, same type checking (both run verified against the server) — you only annotate where it adds meaning, the machine fills in the rest. Safety is not a tax paid in keystrokes.
+
+# ARC 6 — The database landscape
+
+## Slide: "Type safety of modern databases" (31:45–32:30)
+
+- Zoom out from the two databases we've compared to the whole landscape. Two axes: type safety and verbosity.
+- MongoDB top-left: schemaless, frictionless, zero guarantees. Neo4j, JanusGraph nearby; Amazon Neptune lower (verbose, still loose).
+- TigerGraph and Stardog: typed-ish, but ceremonial. PostgreSQL bottom-right: enforced schema at the cost of DDL/JOIN ceremony — the classic trade.
+- **TypeDB top-right**: enforced schema without SQL's ceremony — the same migration programming languages made (dynamic → typed-with-inference), one layer down. Strictness is a dial, not a binary — blog: *How strict should your schema be?*
+
+# ARC 7 — Benefits
+
+## Slide: "For developers" (32:30–33:15)
+
+- **Easier to review**: a PR's queries and schema changes carry their contract with them — the reviewer reads the types instead of tracing the whole codebase.
+- **Verify correctness by looking at the types**: if a query compiles against the schema, whole bug classes (wrong role, missing attribute, forgotten label, accidental list) are already ruled out — we watched each of them die in arcs 4–5.
+- Plus: the error surfaces at commit time in dev, not in production three services downstream; validation lives in the one place every write passes through instead of drifting across N microservices.
+
+## Slide: "For AI agents" (33:15–33:50)
+
+- The division of labor: **the LLM generates the query, the database validates it**. The schema bounds what an agent can express; errors tell it when it's left the road.
+- The stricter the type system, the more reliable the agent — a wrong Cypher query silently returns empty (the agent can't tell "no data" from "bad query"); a wrong TypeQL query fails loudly, so self-correction works.
+
+## Slide: "The benchmark" (33:50–34:30)
+
+- Blog #2: Reactome in MySQL/Neo4j/TypeDB, Claude Sonnet 5 + DeepSeek V4 Pro, 42 questions, 3,024 runs.
+- Zero-shot, SQL and Cypher win on training data (~60% vs TypeQL's 25%). In-context docs close the gap. **With retries TypeQL comes out on top at 92%** — because its loud, precise errors are exactly the feedback a retry loop needs.
+- Source: *Benchmarking LLM query generation across SQL, Cypher and TypeQL* (typedb.com/blog).
+
+## Close (34:30–35:00)
+
+- One line: we type-checked our code years ago — TypeDB type-checks the data. Thank you; Q&A.
 
 ---
 

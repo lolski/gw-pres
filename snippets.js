@@ -22,6 +22,8 @@ window.SNIPPETS = {
  "typedb/queries/09-query-all-goods.tql": "# polymorphic: books AND electronics \u2014 guaranteed complete,\n# because every book/electronic IS a good, by schema.\nmatch $g isa good, has price $p;\n",
  "typedb/queries/10-query-good-warranty.tql": "# TYPE ERROR [QUA4], rejected before touching data:\n# good does not own warranty-expired-date \u2014 only electronic does.\nmatch $g isa good;\nfetch { \"warranty\": $g.warranty-expired-date };\n",
  "typedb/queries/11-query-electronic-fields.tql": "# narrowed to electronic: price (inherited from good) AND warranty\nmatch $e isa electronic;\nfetch { \"price\": $e.price, \"warranty\": $e.warranty-expired-date };\n",
+ "typedb/queries/12-query-annotated.tql": "# every variable explicitly typed\nmatch\n  $u isa user;\n  $g isa good;\n  $t isa transaction (buyer: $u, item: $g);\n  $t has amount $a;\n  $g has price $p;\n",
+ "typedb/queries/13-query-inferred.tql": "# same query, same type safety \u2014 types INFERRED:\n# buyer must be a user, item must be a good\nmatch\n  $t isa transaction (buyer: $u, item: $g);\n  $t has amount $a;\n  $g has price $p;\n",
  "neo4j/queries/fragments/price-twice.cypher": "(:Book => :Good {price :: FLOAT NOT NULL,     // price: declared here\u2026\n                 isbn :: STRING NOT NULL}),\n(:Electronic => :Good {price :: FLOAT NOT NULL,   // \u2026and again here\n                       warrantyExpiredDate :: DATE NOT NULL})\n// no abstract supertype, no shared attribute\n",
  "typedb/queries/fragments/price-once.tql": "entity good @abstract,\n  owns price @card(1..1);          # price: declared ONCE\nentity book sub good,\n  owns isbn @card(1..1);\nentity electronic sub good,\n  owns warranty-expired-date @card(1..1);\n"
 };

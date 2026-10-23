@@ -1,0 +1,7 @@
+# every variable explicitly typed
+match
+  $u isa user;
+  $g isa good;
+  $t isa transaction (buyer: $u, item: $g);
+  $t has amount $a;
+  $g has price $p;

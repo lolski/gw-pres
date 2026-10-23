@@ -1,0 +1,6 @@
+# same query, same type safety — types INFERRED:
+# buyer must be a user, item must be a good
+match
+  $t isa transaction (buyer: $u, item: $g);
+  $t has amount $a;
+  $g has price $p;

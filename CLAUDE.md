@@ -37,6 +37,17 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
   - querying for just electronic, just book, and all goods
     - price is a shared field, declared exactly once at 'good'. compare it with neo4j side by side where in neo4j price has to be redeclared for both electronic and book.
     - when querying for goods, can't access isbn and warranty field. when querying specifically for electronic, price and warranty is available
+  - type safety without verbosity: type inference. using the ecommerce domain, show one query fully annotated with its type, and side by side the same query where the type can be omitted
+- type safety of modern databases: mongodb, postgresql, typedb, amazon neptune, neo4j, tigergraph, janusgraph, stardog
+  - axis 1: not typesafe <----> typesafe
+  - axis 2: verbose <----> not verbose
+- arc 7: benefits
+  - for developers
+    - easier to review
+    - verify correctness simply by looking at types
+  - for AI agents, guardrails and the likes
+    - LLM generates query, databases validates the query
+    - the stricter the type system the more reliable it is
 
 # Examples: Ecommerce
 Whenever show off a feature and making a comparison vs neo4j, use these e-commerce examples. Here are the "entities" and how they're related to others:
