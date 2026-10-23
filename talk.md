@@ -1,62 +1,129 @@
-# Bringing Type Systems into the Graph World
-### 35 min · five arcs: property graphs → Neo4j happy/unhappy → TypeDB happy/type-safe
+# Bringing Type Systems into the Graph World — talking points
+### 35 min · the slides show only figures and code; everything to SAY is here, per slide
 
-**Running example:** `user` (email, address, optional phone) — `transaction` (user + goods; amount, date) — `good` (price), either a `book` (isbn) or an `electronic` (warranty-expired-date)
+**Domain:** `user` (email, address, optional phone) — `transaction` (a buyer + goods; amount, date) — `good` (price), either a `book` (isbn) or an `electronic` (warranty-expired-date)
 
-**All snippets live in files** — `neo4j/queries/*.cypher` and `typedb/queries/*.tql` — fetched into the deck at render time and testable (`neo4j/test.sh` against real Community/Enterprise instances, `typedb/test.sh` via `typeql-check`). Edit the file, both update.
+**Snippet discipline:** every code block is fetched from `neo4j/queries/*.cypher` or `typedb/queries/*.tql` — tested against real servers (`neo4j/test.sh` for both editions, `typedb/test.sh` against the 3.14.1 folder distribution). Edit a file → slide and test both update (`./build-snippets.sh` refreshes the `file://` fallback).
 
 ---
+
+## Title slide (0:00–1:00)
+
+- Who I am; the promise from the abstract: graphs are great at connections and terrible at guarantees — we'll make a graph database behave like a typed language.
 
 # ARC 1 — Neo4j and the property graph
 
-## 1. From dots-and-lines to a property graph (0:00–5:00)
+## Slide: "A graph: nodes and edges" (1:00–3:00)
 
-- Plain directed graph (figure, graph notation): nodes, directed edges, nothing else. Relationships are first-class — no join tables — but the graph says nothing *about* the nodes and edges.
-- Same picture in property-graph notation (figure): Neo4j adds **labels** (`:User`, multi-label `:Good:Book`), **key-value properties**, **typed directed relationships** (`:BUYER`, `:CONTAINS`).
-- Now the picture has names: "all users", "everything this transaction contains".
+- This is the whole data model: nodes and *directed* edges. That's it.
+- The power: relationships are first-class — no join tables, no foreign keys; the connection *is* the data.
+- The poverty: the graph says nothing *about* the nodes and edges. Which circle is the user? What does this arrow mean? The picture is mute.
+
+## Slide: "Neo4j: the labeled property graph" (3:00–5:00)
+
+- Same picture, now in property-graph notation. Neo4j adds exactly three things:
+  1. **Labels** on nodes — `:User`, `:Transaction`, multi-labels like `:Good:Book`;
+  2. **key-value properties** on nodes and relationships;
+  3. **typed, directed relationships** — `:BUYER`, `:CONTAINS`.
+- Now the picture has names: you can ask "all users", "everything this transaction contains".
+- Plant the seed: labels and properties *describe* the data. Do they *constrain* it? Hold that question.
 
 # ARC 2 — Ecommerce in Neo4j: the happy path
 
-## 2. Building the shop (5:00–10:00)
+## Slide: "Modeling the schema: graph types" (5:00–8:00)
 
-- **Schema with graph types** (`01-schema-graph-type.cypher`) — Neo4j's best effort and genuinely a big step: typed properties, `NOT NULL`, `IS KEY`, implied labels (`:Book => :Good`), relationship endpoints. Land verbally: Cypher 25, **Enterprise only** (GA 2026.06); on Community the entire vocabulary is one uniqueness constraint (`02`). Note `price` re-declared per kind — no shared supertype attribute, no abstractness.
-- **Inserting goods** (`03`), **user + transaction** (`04`). Be fair: Cypher's pattern syntax is genuinely pleasant.
+- This is Neo4j's best effort, and genuinely a big step: **graph types** — typed properties (`:: STRING`), required fields (`NOT NULL`), keys (`IS KEY`), implied labels (`:Book => :Good`), declared relationship endpoints.
+- The fine print to land verbally: **Cypher 25, Enterprise only, GA 2026.06**. On Community — what most people run, and anything pre-2026 — the entire schema vocabulary is one line: `CREATE CONSTRAINT … REQUIRE u.email IS UNIQUE`.
+- Also note: `price` is re-declared on both `Book` and `Electronic` — there's no shared supertype attribute, no abstract type.
+- Ref if asked: https://neo4j.com/docs/cypher-manual/current/schema/
+
+## Slide: "Inserting a user and a transaction" (8:00–9:30)
+
+- Walk the pattern: `(u)<-[:BUYER]-(t:Transaction)-[:CONTAINS]->(b)`.
+- Be fair to Neo4j: Cypher's ASCII-art pattern syntax is genuinely pleasant to read and write.
+
+## Slide: "Inserting goods" (9:30–11:00)
+
+- `:Good:Book` — the multi-label stands in for "a book *is a* good". By **convention, not by rule**: nothing anywhere says a `:Book` must also be `:Good`. Hold that thought — it returns in the next arc.
 
 # ARC 3 — Ecommerce in Neo4j: the unhappy path
 
-## 3. Same shop, three everyday operations (10:00–17:00)
+## Slide: "The unhappy path" (11:00–11:30)
 
-Framed on **Community** (like the local demo — and any pre-2026 install): see `neo4j/queries.md` for the verified per-edition outcome table.
+- Framing: same shop, three operations any ecommerce backend does every day. Running on **Community** — where graph types don't exist (equally: any Neo4j below 2026). Verified outcome table: `neo4j/queries.md`.
 
-- **Two email addresses** (`05`): a list-valued `email` commits; a list wrapping an existing email slips past the uniqueness constraint. (Graph type would catch it — Enterprise price of admission.)
-- **Querying all goods** (`07`): the `:Book` that forgot `:Good` is silently missing from the revenue report. (Implied labels fix this — again Enterprise.)
-- **Phone may be null** (`08`): absence and typo both yield `null`; `WHERE u.phone = …` and `WHERE NOT u.phone = …` both drop the no-phone user — three-valued logic.
-- If asked about Enterprise: `09`/`10` show the graph type catching the first two, and what *still* slips through even there — open rel types, no cardinality (a goods-less transaction commits). That's the segue.
+## Slide: "1 · Inserting two email addresses" (11:30–13:30)
+
+- The domain says one email per user. This insert gives it a **list** of two — and it commits: any property can silently become a list.
+- Worse: the uniqueness constraint compares whole values, so a *list wrapping an existing email* also slips past it.
+- A graph type's `email :: STRING` would catch this (verified: fails with 22N78 on Enterprise) — but that's the Enterprise price of admission; everywhere else the "schema" can't even say *one email per user*.
+
+## Slide: "2 · Querying for all goods" (13:30–15:30)
+
+- Six months ago someone wrote `CREATE (:Book {...})` and forgot `:Good`. It committed fine.
+- Today the revenue report does `MATCH (g:Good)` — and that book is simply not in the results. No error, no warning; it quietly doesn't count.
+- Multi-labels are convention: "all goods" is only as complete as everyone's memory. (Graph types' implied labels fix this — again Enterprise; verified 22NB3.)
+
+## Slide: "3 · Querying a user whose phone may be null" (15:30–17:30)
+
+- "Optional" is declared nowhere — every property is optional everywhere.
+- A user without a phone returns `null`. A **typo'd property** (`u.phoen`) also returns `null`. Absence and mistake are indistinguishable.
+- Null propagates through three-valued logic: `WHERE u.phone = …` drops the no-phone user, and `WHERE NOT u.phone = …` *also* drops them — they're in neither result. Excluded middle, violated. No tool warns you.
+- If asked about Enterprise: graph types don't change query semantics — null behaves identically there (verified). And `queries/10` shows what even graph types allow: they're *open* (undeclared relationship types unconstrained) with no cardinality — a goods-less transaction still commits. That's the segue.
 
 # ARC 4 — Ecommerce in TypeDB: the happy path
 
-## 4. The same shop, typed (17:00–24:00)
+## Slide: "Modeling the schema" (17:30–21:00)
 
-- **Schema** (`typedb/queries/01-schema.tql`) — the whole domain, enforced in any edition: attributes with value types, `@key` email, **cardinality** (`@card(0..1)` phone, `@card(1..)` items per transaction, exactly one buyer), **inheritance** (`good @abstract`, `book sub good`, `electronic sub good` — `price` declared once on the supertype).
-- **Inserting goods** (`02`): a book *is* a good by schema — no label to remember.
-- **Inserting user + transaction** (`03`, `04`).
+- The same domain in TypeQL — enforced in **any edition**. Walk it top to bottom:
+  - attributes are typed values, declared once;
+  - `email @key` — exactly one, unique, the identity;
+  - **cardinality**: `phone @card(0..1)` (optionality is a schema fact), `relates item @card(1..)` (a transaction has at least one good), `relates buyer @card(1..1)`;
+  - **inheritance**: `good @abstract`, `book sub good`, `electronic sub good` — `price` declared *once* on the supertype; a bare "good" can't exist because it's abstract.
+- Contrast with the graph type slide: no re-declared `price`, no convention — the hierarchy is a schema object.
+
+## Slide: "Inserting goods" (21:00–22:00)
+
+- A `book` *is* a `good` by schema — there's no second label to remember, so there's nothing to forget. The entire class of "forgot the label" bugs doesn't exist.
+
+## Slide: "Inserting a user and a transaction" (22:00–24:00)
+
+- Insert user, then match-insert the transaction with roles: `(buyer: $u, item: $b)`.
+- Note what the schema is silently checking here: buyer must be a `user`, item must be a `good`, at least one item, exactly one buyer, amount and date present.
 
 # ARC 5 — TypeDB: type safety
 
-## 5. The unhappy path, revisited (24:00–32:00)
+## Slide: "The unhappy path, revisited" (24:00–24:30)
 
-The same operations that silently misbehaved in Neo4j:
+- The same three operations that silently misbehaved in Neo4j. Same keystrokes, different database.
 
-- **Two emails** (`05`): **rejected at commit** — `email` is `@key`, exactly one. The invalid state can't be stored; no downstream code ever sees it.
-- **Phone may be absent** (`06`): no null exists. Optionality is in the schema (`@card(0..1)`) and explicit in the query (`try { $u has phone $p; }`) — `$p` bound if present, absent otherwise. A typo'd attribute name is a type error, not an empty column.
-- **Just electronics, just books, all goods** (`07`–`09`): narrow by subtype or query the supertype — the polymorphic `$g isa good` is **guaranteed complete**; "forgot the label" cannot exist.
+## Slide: "1 · Inserting two email addresses" (24:30–26:30)
 
-Wrap (32:00–35:00): same graph-shaped data, but the contract lives in the database. Blogs to cite: *How strict should your schema be?* · *Benchmarking LLM query generation…* (typedb.com/blog). Q&A.
+- **Rejected at commit**: `email` is `@key` — exactly one. Verified live: `[DVL9] key constraint violation … of 'email'`.
+- The invalid state *cannot be stored*, so no downstream code, report, or agent ever sees it. The error surfaces at the database boundary — not in next quarter's revenue report.
+
+## Slide: "2 · Phone may be absent — no null" (26:30–29:00)
+
+- There is no null in TypeDB. Optionality lives in the schema (`@card(0..1)`) and is **explicit in the query**: `try { $u has phone $p; }` — `$p` is bound if present, absent otherwise.
+- No null to propagate through comparisons, no three-valued logic traps.
+- And a typo'd attribute name is a **type error** — the schema knows `phoen` isn't a thing — not an empty column.
+
+## Slide: "3 · Just electronics, just books, all goods" (29:00–32:00)
+
+- Narrow by subtype (`isa book`, `isa electronic`) or query the supertype (`isa good`) — polymorphic, one query, no UNION.
+- The polymorphic result is **guaranteed complete**: every book and electronic is a good by schema. Add `furniture sub good` next sprint — this query already covers it.
+
+## Close (32:00–35:00)
+
+- We type-checked our code (TypeScript, Python hints); TypeDB type-checks the data layer — same graph-shaped data, but the contract lives in the database and is enforced on every write.
+- Strictness is a dial, not a binary — blog: *How strict should your schema be?*
+- For AI agents the same strictness is the feedback loop — a wrong query fails loudly instead of returning empty — blog: *Benchmarking LLM query generation across SQL, Cypher and TypeQL* (typedb.com/blog).
+- Q&A.
 
 ---
 
-## Speaker notes
-- Arc badge top-right tracks the five arcs; TypeDB logo top-left (brand styling from typedb.com).
-- Demos: `neo4j/` has Community 2025.09 **and** Enterprise 2026.09 (run one at a time; `NEO4J_DIST=… ./test.sh`). `typedb/test.sh` runs all 9 TypeQL files against a **real TypeDB server** (`typedb server`, brew) — verified: all pass, with `05` failing at commit by design (`[DVL9]` email key violation). Outcome table in `typedb/queries.md`.
-- The deck fetches snippets over HTTP — serve locally with `python3 -m http.server` (file:// won't load them).
-- Neo4j schema docs: https://neo4j.com/docs/cypher-manual/current/schema/
+## Logistics
+- Arc badge top-right tracks the five arcs; TypeDB logo + brand styling from typedb.com.
+- Serve the deck over http (`python3 -m http.server`) or rely on the `snippets.js` fallback for `file://`.
+- Demos: `neo4j/` (Community 2025.09 + Enterprise 2026.09, one at a time, `NEO4J_DIST=…`), `typedb/` (3.14.1 folder distribution). Both `test.sh` suites verified green as documented in each folder's `queries.md`.
+- Re-validate TypeQL after edits with `typeql-check`.
