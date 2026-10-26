@@ -13,6 +13,7 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
 
 ## Talk Content
 
+- intro: Bringing Type Systems into the Graph World. Ganeshwara Hananda · Head of Architecture @ TypeDB
 - neo4j and property graph: illustrate using diagram depicting the ecommerce domain
 - ecommerce example in neo4j (happy path)
   - modeling the schema using graph types
@@ -41,7 +42,7 @@ TypeDB lets one declare constraints on graphs by borrowing various concepts from
 - type safety of modern databases: mongodb, postgresql, typedb, amazon neptune, neo4j, tigergraph, janusgraph, stardog
   - axis 1: not typesafe <----> typesafe
   - axis 2: verbose <----> not verbose
-- arc 7: benefits
+- benefits
   - for developers
     - easier to review
     - verify correctness simply by looking at types
@@ -71,7 +72,6 @@ Whenever show off a feature and making a comparison vs neo4j, use these e-commer
 - neo4j and typedb query files which will be embedded into presentation slides. the queries are put into files so they can be tested against against real typedb and neo4j server for correctness. they will be stored into the `neo4j` and `typedb` folder respectively
 
 - presentation slides should be as minimal as possible, and the content be put into "talking points" md file. because not everything i want to say has to be in the slide. the slide can show the figure and code blocks. but the explanation should be in talking points md file.
-- there are multiple arcs in the presentation. the arc should be displayed to provide context to listeners as to where we are
 
 # Docs / References
 Here are sources you can reference

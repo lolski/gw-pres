@@ -1,5 +1,4 @@
-// Cypher 25 · Neo4j 2026.02+ · Enterprise only
-// (EXPECTED TO FAIL on the Community demo — shown on the slide for reference)
+// Graph Types - available for Enterprise only
 ALTER CURRENT GRAPH TYPE SET {
   (:User => {email :: STRING IS KEY,
              address :: STRING NOT NULL,

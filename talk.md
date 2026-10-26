@@ -9,7 +9,8 @@
 
 ## Title slide (0:00–1:00)
 
-- Who I am; the promise from the abstract: graphs are great at connections and terrible at guarantees — we'll make a graph database behave like a typed language.
+- Intro line as on the slide: Ganeshwara Hananda, Head of Architecture @ TypeDB ("Ganesh" is fine).
+- The promise from the abstract: graphs are great at connections and terrible at guarantees — we'll make a graph database behave like a typed language.
 
 # ARC 1 — Neo4j and the property graph
 
@@ -168,7 +169,7 @@
 ---
 
 ## Logistics
-- Arc badge top-right tracks the five arcs; TypeDB logo + brand styling from typedb.com.
+- TypeDB logo top-left on every content slide; brand styling from typedb.com. No on-screen arc indicator — the arc headers in this file are for the speaker only.
 - Serve the deck over http (`python3 -m http.server`) or rely on the `snippets.js` fallback for `file://`.
 - Demos: `neo4j/` (Community 2025.09 + Enterprise 2026.09, one at a time, `NEO4J_DIST=…`), `typedb/` (3.14.1 folder distribution). Both `test.sh` suites verified green as documented in each folder's `queries.md`.
 - Re-validate TypeQL after edits with `typeql-check`.

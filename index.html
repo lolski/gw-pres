@@ -43,11 +43,6 @@
     .reveal .cols h3 { font-size: 0.65em; margin-bottom: 0.3em; }
     .reveal .cols pre { margin: 0; }
     .reveal .cols pre code { font-size: 0.52em; line-height: 1.35; }
-    #arc-badge {
-      position: fixed; top: 18px; right: 18px; z-index: 10;
-      font-family: var(--r-main-font); font-size: 15px; color: var(--td-muted);
-      letter-spacing: 0.04em; pointer-events: none;
-    }
     #logo-badge { position: fixed; top: 14px; left: 18px; z-index: 10; color: var(--td-white); pointer-events: none; }
     #logo-badge svg { width: 96px; height: 33px; display: block; }
     .title-logo { color: var(--td-white); width: 280px; height: 95px; margin: 0 auto 0.6em; display: block; }
@@ -83,7 +78,7 @@
 <section>
   <svg class="title-logo"><use href="#typedb-logo"/></svg>
   <h1 style="font-size:1.6em">Bringing Type Systems<br>into the Graph World</h1>
-  <p class="small">Ganeshwara Hananda · TypeDB</p>
+  <p class="small">Ganeshwara Hananda · Head of Architecture @ TypeDB</p>
 </section>
 
 <!-- ============ ARC 1 — NEO4J AND THE PROPERTY GRAPH ============ -->
@@ -318,7 +313,6 @@ Reactome dataset · MySQL, Neo4j, TypeDB · 42 questions · 3,024 runs
 
 </div>
 </div>
-<div id="arc-badge"></div>
 <div id="logo-badge"><svg><use href="#typedb-logo"/></svg></div>
 <script src="snippets.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
@@ -380,20 +374,13 @@ Reactome dataset · MySQL, Neo4j, TypeDB · 42 questions · 3,024 runs
     plugins: [RevealMarkdown, RevealHighlight]
   });
 
-  // Persistent arc indicator: each arc's first slide carries data-arc; the
-  // label carries forward until the next data-arc (empty string hides it).
-  const sections = Array.from(document.querySelectorAll('.slides > section'));
-  function updateArcBadge() {
-    const h = Reveal.getIndices().h;
-    let label = '';
-    for (let i = 0; i <= h; i++)
-      if (sections[i].dataset.arc !== undefined) label = sections[i].dataset.arc;
-    document.getElementById('arc-badge').textContent = label;
-    // corner logo would double with the title slide's big logo — hide it there
-    document.getElementById('logo-badge').style.display = h === 0 ? 'none' : 'block';
+  // corner logo would double with the title slide's big logo — hide it there
+  function updateLogoBadge() {
+    document.getElementById('logo-badge').style.display =
+      Reveal.getIndices().h === 0 ? 'none' : 'block';
   }
-  Reveal.on('ready', updateArcBadge);
-  Reveal.on('slidechanged', updateArcBadge);
+  Reveal.on('ready', updateLogoBadge);
+  Reveal.on('slidechanged', updateLogoBadge);
 
   // Snippets live in neo4j/queries/*.cypher and typedb/queries/*.tql so the
   // exact same files can be tested (neo4j/test.sh, typedb/test.sh); fetch them.
