@@ -1,7 +1,13 @@
 # 1
-- thank you to stenli and graph week organiser for inviting us
-- apa gw presentasi bahasa indonesia aja ya. my name's ganesh, i am the head of architecture, so responsible for techincal stuff
-- shout out to the graph crowd
+- good afternoon everyone
+- so excited to be here, special thanks to Stenli and the Graph Week team
+- we were in contact a few months ago unfortunately due to location remote presentation is the only. typedb and i are based in london.
+- otherwise I would love to do it in person together with you guys
+- shout out to the graph crowd in south east asia
+
+- my name is ganesh, the head of architecture @ typedb, meaning i am in charge of leading product. the last one of which being adding vector search capabilities to typedb.
+
+- moving on to the main topic, today's talk is about graph database and type theory. and why they complement one another
 
 # 2
 - graph: we like it because it's intuitive. in a way that's how we think
