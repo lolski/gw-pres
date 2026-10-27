@@ -139,7 +139,8 @@
 ## Slide: "Type safety of modern databases" (31:45–32:30)
 
 - Zoom out from the two databases we've compared to the whole landscape. Two axes: type safety and verbosity.
-- MongoDB top-left: schemaless, frictionless, zero guarantees. Neo4j, JanusGraph nearby; Amazon Neptune lower (verbose, still loose).
+- MongoDB top-left: schemaless, frictionless, zero guarantees. Neo4j Community and JanusGraph nearby; Amazon Neptune lower (verbose, still loose).
+- Neo4j Enterprise with graph types sits mid-chart: typed properties and implied labels move it right, but open schemas and no cardinality keep it well short of the type-safe edge — and it costs the Enterprise license.
 - TigerGraph and Stardog: typed-ish, but ceremonial. PostgreSQL bottom-right: enforced schema at the cost of DDL/JOIN ceremony — the classic trade.
 - **TypeDB top-right**: enforced schema without SQL's ceremony — the same migration programming languages made (dynamic → typed-with-inference), one layer down. Strictness is a dial, not a binary — blog: *How strict should your schema be?*
 
